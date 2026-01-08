@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "808403579590",
+    "project_id": "dave-3c83d",
+    "storage_bucket": "dave-3c83d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:808403579590:android:dc5f51babf3332ea565dc7",
+        "android_client_info": {
+          "package_name": "com.example.dave"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDy1f-D0U8AZPgeWacsImBvNbVpq6a9MUg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
