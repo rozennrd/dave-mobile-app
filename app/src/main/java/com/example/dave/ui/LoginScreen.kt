@@ -50,7 +50,7 @@ fun LoginScreen(
             Icon(
                 painter = painterResource(R.drawable.logo_dave),
                 contentDescription = null,
-                tint = Color.White,
+                tint = Color.Unspecified,
                 modifier = Modifier.size(62.dp)
             )
         }
@@ -68,7 +68,8 @@ fun LoginScreen(
 
         Text(
             text = "Let’s grow together 💚",
-            fontSize = 14.sp,
+            fontSize = 17.sp,
+            fontFamily = Jost,
             color = BlueSoft
         )
 

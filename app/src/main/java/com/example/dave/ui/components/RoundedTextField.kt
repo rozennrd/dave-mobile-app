@@ -25,7 +25,7 @@ fun RoundedTextField(
     fieldColor: Color,
     hintColor: Color,
     textColor: Color,
-    iconSize: Dp = 20.dp,
+    iconSize: Dp = 30.dp,
     visualTransformation: VisualTransformation = VisualTransformation.None
 ) {
     TextField(
@@ -38,7 +38,7 @@ fun RoundedTextField(
             Icon(
                 painter = leadingIcon,
                 contentDescription = null,
-                tint = Color(0xFFEFEFEF),
+                tint = Color.Unspecified,
                 modifier = Modifier.size(iconSize)
             )
         },

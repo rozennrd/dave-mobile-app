@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
+import com.example.dave.ui.AccountScreen
 import com.example.dave.ui.LoginScreen
 import com.example.dave.ui.theme.DaveTheme
 
@@ -41,5 +42,11 @@ class MainActivity : ComponentActivity() {
 @Preview
 @Composable
 fun LoginScreenPreview() {
+    AccountScreen()
+}
+
+@Preview
+@Composable
+fun AccountScreenPreview() {
     LoginScreen()
 }
