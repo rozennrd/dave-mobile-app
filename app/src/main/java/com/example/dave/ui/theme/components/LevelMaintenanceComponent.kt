@@ -3,6 +3,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -15,12 +16,65 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.dave.R
-import com.example.dave.ui.theme.Beige
-import com.example.dave.ui.theme.BlueSoft
-import com.example.dave.ui.theme.BrownPrimary
 import com.example.dave.ui.theme.DaveTheme
-import com.example.dave.ui.theme.GreenPrimary
 import com.example.dave.ui.theme.SulphurPoint
+
+
+@Composable
+fun LevelMaintenanceSmallDisplay(
+    watering: String? = null,
+    sunlight: List<String>? = null,
+    careLevel: String? = null,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                MaterialTheme.colorScheme.tertiary,
+                shape = RoundedCornerShape(50)
+            )
+            .padding(horizontal = 8.dp, vertical = 6.dp), // Even smaller padding
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Watering - icon only, no text
+        MaintenanceIcon(
+            iconResource = getWateringIcon(watering),
+            contentDescription = "Watering: $watering",
+            color = MaterialTheme.colorScheme.secondary
+        )
+
+        // Sunlight - icon only, no text
+        MaintenanceIcon(
+            iconResource = getSunlightIcon(sunlight),
+            contentDescription = "Sunlight: ${sunlight?.joinToString()}",
+            color = MaterialTheme.colorScheme.surface
+        )
+
+        // Care - icon only, no text
+        MaintenanceIcon(
+            iconResource = getCareIcon(careLevel),
+            contentDescription = "Care: $careLevel",
+            color = MaterialTheme.colorScheme.primary
+        )
+    }
+}
+
+@Composable
+private fun MaintenanceIcon(
+    @DrawableRes iconResource: Int,
+    contentDescription: String,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Image(
+        painter = painterResource(id = iconResource),
+        contentDescription = contentDescription,
+        modifier = modifier.size(16.dp), // Small icon
+        colorFilter = ColorFilter.tint(color)
+    )
+}
 
 @Composable
 fun LevelMaintenance(
@@ -32,27 +86,37 @@ fun LevelMaintenance(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(BrownPrimary, shape = RoundedCornerShape(50))
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+            .background(
+                MaterialTheme.colorScheme.tertiary, // Use theme color instead of BrownPrimary
+                shape = RoundedCornerShape(50)
+            )
+            .padding(horizontal = 12.dp, vertical = 8.dp), // Reduced padding
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Watering
         MaintenanceItem(
             title = "Watering",
-            iconResource = getWateringIcon(watering)
+            iconResource = getWateringIcon(watering),
+            modifier = Modifier.weight(1f) // Distribute space evenly
         )
+
+        Spacer(modifier = Modifier.width(4.dp)) // Smaller spacer
 
         // Sunlight
         MaintenanceItem(
             title = "Sunlight",
-            iconResource = getSunlightIcon(sunlight)
+            iconResource = getSunlightIcon(sunlight),
+            modifier = Modifier.weight(1f)
         )
+
+        Spacer(modifier = Modifier.width(4.dp))
 
         // Care
         MaintenanceItem(
             title = "Care",
-            iconResource = getCareIcon(careLevel)
+            iconResource = getCareIcon(careLevel),
+            modifier = Modifier.weight(1f)
         )
     }
 }
@@ -60,31 +124,33 @@ fun LevelMaintenance(
 @Composable
 private fun MaintenanceItem(
     title: String,
-    @DrawableRes iconResource: Int
+    @DrawableRes iconResource: Int,
+    modifier: Modifier = Modifier
 ) {
     val iconColor = when (title.lowercase()) {
-        "watering" -> BlueSoft
-        "sunlight" -> Beige
-        "care" -> GreenPrimary
-        else -> Color.White
+        "watering" -> MaterialTheme.colorScheme.secondary // Use theme color
+        "sunlight" -> MaterialTheme.colorScheme.surface
+        "care" -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.onSurface
     }
 
     Column(
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(4.dp) // Reduced spacing
     ) {
         Text(
             text = title,
-            color = Color.White,
-            fontSize = 25.sp,
-            fontWeight = FontWeight.Normal,
+            color = MaterialTheme.colorScheme.onTertiary, // Use theme contrast color
+            fontSize = 12.sp, // Smaller font size
+            fontWeight = FontWeight.Medium,
             fontFamily = SulphurPoint
         )
 
         Image(
             painter = painterResource(id = iconResource),
             contentDescription = title,
-            modifier = Modifier.size(32.dp),
+            modifier = Modifier.size(20.dp), // Smaller icon
             colorFilter = ColorFilter.tint(iconColor)
         )
     }
@@ -94,9 +160,9 @@ private fun MaintenanceItem(
 @DrawableRes
 private fun getWateringIcon(watering: String?): Int {
     return when (watering?.lowercase()) {
-        "rare", "minimum" -> R.drawable.humidity_low_24dp // Arrosage rare
-        "average", "moderate" -> R.drawable.humidity_mid_24dp // Arrosage modéré
-        "frequent" -> R.drawable.humidity_high_24dp // Arrosage fréquent
+        "rare", "minimum" -> R.drawable.humidity_low_24dp
+        "average", "moderate" -> R.drawable.humidity_mid_24dp
+        "frequent" -> R.drawable.humidity_high_24dp
         else -> R.drawable.humidity_mid_24dp
     }
 }
@@ -106,9 +172,9 @@ private fun getWateringIcon(watering: String?): Int {
 private fun getSunlightIcon(sunlight: List<String>?): Int {
     val sunlightLevel = getSunlightLevel(sunlight)
     return when (sunlightLevel?.lowercase()) {
-        "low" -> R.drawable.brightness_empty_24dp // Ensoleillement faible
-        "part shade" -> R.drawable.brightness_medium_24dp // Ensoleillement moyen
-        "full" -> R.drawable.brightness_full_24dp // Ensoleillement fort
+        "low" -> R.drawable.brightness_empty_24dp
+        "part shade" -> R.drawable.brightness_medium_24dp
+        "full" -> R.drawable.brightness_full_24dp
         else -> R.drawable.brightness_medium_24dp
     }
 }
@@ -117,9 +183,9 @@ private fun getSunlightIcon(sunlight: List<String>?): Int {
 @DrawableRes
 private fun getCareIcon(careLevel: String?): Int {
     return when (careLevel?.lowercase()) {
-        "high", "difficult" -> R.drawable.heart_plus_24dp // Coeur + = Difficile
-        "medium" -> R.drawable.heart_medium_24dp // Coeur vide = Medium
-        "easy", "low" -> R.drawable.heart_minus_24dp // Coeur - = Facile
+        "high", "difficult" -> R.drawable.heart_plus_24dp
+        "medium" -> R.drawable.heart_medium_24dp
+        "easy", "low" -> R.drawable.heart_minus_24dp
         else -> R.drawable.heart_medium_24dp
     }
 }
@@ -142,7 +208,21 @@ fun LevelMaintenancePreview() {
         LevelMaintenance(
             watering = "average",
             sunlight = listOf("full sun", "partial shade"),
-            careLevel = "medium"
+            careLevel = "medium",
+            modifier = Modifier.width(200.dp) // Test with constrained width
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 150)
+@Composable
+fun LevelMaintenanceSmallPreview() {
+    DaveTheme {
+        LevelMaintenance(
+            watering = "average",
+            sunlight = listOf("full sun"),
+            careLevel = "easy",
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }

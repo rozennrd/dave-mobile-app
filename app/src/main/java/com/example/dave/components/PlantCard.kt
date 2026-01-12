@@ -1,18 +1,20 @@
 package com.example.dave.components
 
+import LevelMaintenanceSmallDisplay
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,47 +25,76 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.example.dave.R
 import com.example.dave.models.Plant
 import com.example.dave.ui.theme.DaveTheme
 
 @Composable
-fun PlantCard(plant: Plant) {
+fun PlantCard(plant: Plant, onClick: () -> Unit = {}, modifier: Modifier = Modifier) {
     val fallbackImagePainter = painterResource(id = R.drawable.heart_plant)
     // Your card implementation here
-    Column(
+    Card(
         modifier = Modifier
-            .border(width = 3.dp, color=MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(10))
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10))) {
-        Row(Modifier.background(MaterialTheme.colorScheme.primary).padding(12.dp).fillMaxWidth())  {
-            Text(text = plant.commonName, color = MaterialTheme.colorScheme.onPrimary)
-        }
-        Box(
+            .widthIn(max = 180.dp) // Max width
+            .fillMaxWidth(0.9f)     // But responsive
+    ) {
+        Column(
             modifier = Modifier
+                .border(
+                    width = 3.dp,
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(10)
+                )
                 .fillMaxWidth()
-                .aspectRatio(2.5f)
-        ){
-            FailsafeAsyncImage(
-                url = plant.imageUrl,
-                fallbackImage = fallbackImagePainter,
+                .clip(RoundedCornerShape(10))
+        ) {
+            Row(
+                Modifier.background(MaterialTheme.colorScheme.primary).padding(12.dp).fillMaxWidth()
+            ) {
+                Text(text = plant.commonName, color = MaterialTheme.colorScheme.onPrimary)
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(2.5f)
+                    .clip(
+                        RoundedCornerShape(
+                            topStart = 0.dp,     // Top left stays square
+                            topEnd = 0.dp,       // Top right stays square
+                            bottomStart = 50.dp, // Bottom left rounded
+                            bottomEnd = 50.dp    // Bottom right rounded
+                        )
+                    )
 
-            )
-        }
+            ) {
+                FailsafeAsyncImage(
+                    url = plant.imageUrl,
+                    fallbackImage = fallbackImagePainter,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
 
-        Column(Modifier.padding(12.dp)) {
-            Text(plant.plantName,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Text(plant.scientificName[0],
-                style = MaterialTheme.typography.bodyMedium,
-                fontStyle = FontStyle.Italic)
-            Text(plant.family, style = MaterialTheme.typography.bodySmall)
+            Column(Modifier.padding(12.dp)) {
+                Text(
+                    text = plant.plantName ?: "",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    plant.scientificName[0],
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontStyle = FontStyle.Italic
+                )
+                Text(plant.family ?: "", style = MaterialTheme.typography.bodySmall)
+                Spacer(Modifier.height(10.dp))
+                LevelMaintenanceSmallDisplay(
+                    watering = plant.watering,
+                    sunlight = plant.sunlight,
+                    careLevel = plant.careLevel
+                )
+            }
         }
     }
-
 }
 
 

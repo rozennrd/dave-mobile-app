@@ -8,23 +8,22 @@ const db = admin.firestore(); // Get a reference to Firestore
 
 // Define the Plant model interface for type safety
 interface Plant {
-  id?: string; // Optional, as it's the document ID
+  id?: int;
   common_name: string;
-  scientific_name: string;
+  scientific_name: string[];
   plant_name?: string;
   family?: string;
   type?: string;
   image_url?: string;
   care_level?: string;
-  sunlight?: string;
+  sunlight?: string[];
   watering?: string;
   indoor?: boolean;
   poisonous_to_humans?: boolean;
   poisonous_to_pets?: boolean;
   drought_tolerant?: boolean;
-  soil?: string;
+  soil?: string[];
   notes?: string;
-  cute_name?: string;
   ownerId: string; // Crucial for linking to users
 }
 
