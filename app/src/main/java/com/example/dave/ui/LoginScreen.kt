@@ -70,6 +70,7 @@ fun LoginScreen(
             text = "Let’s grow together 💚",
             fontSize = 17.sp,
             fontFamily = Jost,
+            fontWeight = FontWeight.ExtraLight,
             color = BlueSoft
         )
 

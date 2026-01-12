@@ -109,7 +109,7 @@ fun AccountScreen(
                 Text(
                     text = "Personnalize",
                     fontSize = 20.sp,
-                    color = Color(0xFF4A4A4A),
+                    color = BlueSoft,
                     fontFamily = Jost,
                     fontWeight = FontWeight.ExtraLight
                 )
