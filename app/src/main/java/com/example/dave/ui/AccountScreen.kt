@@ -94,6 +94,7 @@ fun AccountScreen(
                 text = name.ifBlank { "Name" },
                 fontSize = 46.sp,
                 fontWeight = FontWeight.Black,
+                fontFamily = Outfit,
                 color = Color.Black,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -146,7 +147,6 @@ fun AccountScreen(
             )
         }
 
-        // ✅ Navbar collée en bas (ici align 2D autorisé, car BoxScope)
         NavBar(
             modifier = Modifier.align(Alignment.BottomCenter),
             onHomeClick = onHomeClick,

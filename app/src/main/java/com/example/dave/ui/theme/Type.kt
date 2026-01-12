@@ -22,3 +22,7 @@ val Typography = Typography(
 val Jost = FontFamily(
     Font(R.font.jost_extralight, weight = FontWeight.ExtraLight)
 )
+
+val Outfit = FontFamily(
+    Font(R.font.outfit_semibold, weight = FontWeight.SemiBold)
+)
