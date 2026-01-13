@@ -17,11 +17,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import kotlinx.coroutines.launch
 import com.example.dave.R
 import com.example.dave.models.LoginModel
 import com.example.dave.ui.components.NavBar
@@ -30,6 +30,7 @@ import com.example.dave.ui.components.RoundedTextField
 import com.example.dave.ui.theme.*
 
 enum class EditableField { NAME, EMAIL, PASSWORD }
+
 
 @Composable
 fun AccountScreen(
@@ -54,6 +55,12 @@ fun AccountScreen(
     var draftEmail by remember { mutableStateOf(email) }
     var draftPassword by remember { mutableStateOf(password) }
 
+    // Sync depuis Firebase quand le user change
+    LaunchedEffect(currentUser) {
+        name = currentUser?.displayName.orEmpty()
+        email = currentUser?.email.orEmpty()
+    }
+
     // Quel champ est en édition (null = aucun)
     var editingField by remember { mutableStateOf<EditableField?>(null) }
     LaunchedEffect(currentUser) {
@@ -63,6 +70,11 @@ fun AccountScreen(
             }
         }
     }
+
+    val scope = rememberCoroutineScope()
+    val authState by loginModel.authState.collectAsState()
+    val errorMessage = (authState as? LoginModel.AuthState.Error)?.message
+
 
     Box(
         modifier = modifier
@@ -77,7 +89,7 @@ fun AccountScreen(
                 .padding(bottom = 120.dp), // laisse de la place pour la navbar + bouton +
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(50.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -137,6 +149,11 @@ fun AccountScreen(
                     fontFamily = Jost,
                     fontWeight = FontWeight.ExtraLight
                 )
+                if (errorMessage != null) {
+                    Text(text = errorMessage, color = Color(0xFFD32F2F), fontSize = 13.sp)
+                    Spacer(Modifier.height(8.dp))
+                }
+
             }
 
             Spacer(Modifier.height(12.dp))
@@ -163,7 +180,7 @@ fun AccountScreen(
             FieldWithEdit(
                 value = if (editingField == EditableField.EMAIL) draftEmail else email,
                 onValueChange = { draftEmail = it },
-                placeholder = "email@blabla.com",
+                placeholder = email,
                 leadingDrawable = R.drawable.ic_at,
                 isEditing = editingField == EditableField.EMAIL,
                 onEditClick = {
@@ -171,8 +188,15 @@ fun AccountScreen(
                     editingField = EditableField.EMAIL
                 },
                 onValidateClick = {
-                    email = draftEmail
-                    editingField = null
+                    scope.launch {
+                        val res = loginModel.updateEmail(draftEmail)
+                        if (res.isSuccess) {
+                            editingField = null
+                        } else {
+                            email = draftEmail
+                            editingField = null
+                        }
+                    }
                 }
             )
 
@@ -190,8 +214,13 @@ fun AccountScreen(
                     editingField = EditableField.PASSWORD
                 },
                 onValidateClick = {
-                    password = draftPassword
-                    editingField = null
+                    scope.launch {
+                        val res = loginModel.updatePassword(draftPassword)
+                        if (res.isSuccess) {
+                            editingField = null
+                            password = "••••••••"
+                        }
+                    }
                 }
             )
         }
