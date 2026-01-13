@@ -4,6 +4,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -18,8 +26,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.dave.components.PlantList
-import com.example.dave.components.PlantListState
+import com.example.dave.ui.components.PlantList
 import com.example.dave.models.api.PlantViewModel
 import com.example.dave.ui.AccountScreen
 import com.example.dave.ui.LoginScreen
@@ -37,9 +44,8 @@ class MainActivity : ComponentActivity() {
                 // Handle error
             }
         }
-        super.onCreate(savedInstanceState)
-
         setContent {
+
             DaveTheme {
                 val navController = rememberNavController()
 
@@ -55,7 +61,7 @@ class MainActivity : ComponentActivity() {
                         AccountScreen(navController = navController)
                     }
                 }
-            }
+
         }
     }
 }

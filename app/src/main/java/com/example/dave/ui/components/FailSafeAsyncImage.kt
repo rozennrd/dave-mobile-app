@@ -1,4 +1,4 @@
-package com.example.dave.components
+package com.example.dave.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable

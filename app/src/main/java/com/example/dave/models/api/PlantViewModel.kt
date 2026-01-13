@@ -1,7 +1,7 @@
 package com.example.dave.models.api
 
 import androidx.lifecycle.ViewModel
-import com.example.dave.components.PlantListState
+import com.example.dave.ui.components.PlantListState
 import com.example.dave.models.Plant
 import com.google.firebase.functions.FirebaseFunctions
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,7 +25,7 @@ class PlantViewModel : ViewModel() {
                     val data = result.data as List<Map<String, Any>>
                     val plants = data.map { map ->
                         Plant(
-                            id = map["id"] as String,
+                            id = map["id"] as Number,
                             commonName = map["common_name"] as String,
                             scientificName = map["scientific_name"] as List<String>,
                             plantName = map["plant_name"] as? String,
@@ -41,7 +41,6 @@ class PlantViewModel : ViewModel() {
                             droughtTolerant = map["drought_tolerant"] as? Boolean,
                             soil = map["soil"] as? List<String>,
                             notes = map["notes"] as? String,
-                            cuteName = map["cute_name"] as? String
                         )
                     }
                     _plantState.value = PlantListState.Success(plants)

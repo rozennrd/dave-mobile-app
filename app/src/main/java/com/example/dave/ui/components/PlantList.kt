@@ -1,4 +1,4 @@
-package com.example.dave.components
+package com.example.dave.ui.components
 
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp

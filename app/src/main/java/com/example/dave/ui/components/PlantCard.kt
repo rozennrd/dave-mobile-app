@@ -1,4 +1,4 @@
-package com.example.dave.components
+package com.example.dave.ui.components
 
 import LevelMaintenanceSmallDisplay
 import androidx.compose.foundation.background

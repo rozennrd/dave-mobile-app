@@ -46,6 +46,8 @@ android {
 }
 
 dependencies {
+    implementation("androidx.core:core:1.17.0")
+    implementation("androidx.lifecycle:lifecycle-runtime:2.10.0")
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -56,7 +58,6 @@ dependencies {
     implementation(libs.androidx.compose.ui.unit)
     implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.androidx.material3)
-    implementation(libs.firebase.functions.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
