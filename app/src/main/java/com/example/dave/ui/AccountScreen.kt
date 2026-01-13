@@ -29,6 +29,8 @@ import com.example.dave.ui.components.DaveNavItem
 import com.example.dave.ui.components.RoundedTextField
 import com.example.dave.ui.theme.*
 
+enum class EditableField { NAME, EMAIL, PASSWORD }
+
 @Composable
 fun AccountScreen(
     modifier: Modifier = Modifier,
@@ -46,6 +48,14 @@ fun AccountScreen(
 
     val currentUser by loginModel.currentUser.collectAsState()
 
+
+    // Drafts (ce qu’on modifie pendant l’édition)
+    var draftName by remember { mutableStateOf(name) }
+    var draftEmail by remember { mutableStateOf(email) }
+    var draftPassword by remember { mutableStateOf(password) }
+
+    // Quel champ est en édition (null = aucun)
+    var editingField by remember { mutableStateOf<EditableField?>(null) }
     LaunchedEffect(currentUser) {
         if (currentUser == null) {
             navController.navigate("login") {
@@ -53,7 +63,6 @@ fun AccountScreen(
             }
         }
     }
-
 
     Box(
         modifier = modifier
@@ -133,32 +142,57 @@ fun AccountScreen(
             Spacer(Modifier.height(12.dp))
 
             FieldWithEdit(
-                value = name,
-                onValueChange = { name = it },
+                value = if (editingField == EditableField.NAME) draftName else name,
+                onValueChange = { draftName = it },
                 placeholder = "Nom  Prénom",
                 leadingDrawable = R.drawable.ic_user,
-                onEditClick = {}
+                isEditing = editingField == EditableField.NAME,
+                onEditClick = {
+                    // quand on clique le crayon : on ouvre l’édition et on init le draft
+                    draftName = name
+                    editingField = EditableField.NAME
+                },
+                onValidateClick = {
+                    name = draftName
+                    editingField = null
+                }
             )
 
             Spacer(Modifier.height(12.dp))
 
             FieldWithEdit(
-                value = email,
-                onValueChange = { email = it },
+                value = if (editingField == EditableField.EMAIL) draftEmail else email,
+                onValueChange = { draftEmail = it },
                 placeholder = "email@blabla.com",
                 leadingDrawable = R.drawable.ic_at,
-                onEditClick = {}
+                isEditing = editingField == EditableField.EMAIL,
+                onEditClick = {
+                    draftEmail = email
+                    editingField = EditableField.EMAIL
+                },
+                onValidateClick = {
+                    email = draftEmail
+                    editingField = null
+                }
             )
 
             Spacer(Modifier.height(12.dp))
 
             FieldWithEdit(
-                value = password,
-                onValueChange = { password = it },
+                value = if (editingField == EditableField.PASSWORD) draftPassword else password,
+                onValueChange = { draftPassword = it },
                 placeholder = "••••••••",
                 leadingDrawable = R.drawable.ic_lock,
-                onEditClick = {},
-                isPassword = true
+                isPassword = true,
+                isEditing = editingField == EditableField.PASSWORD,
+                onEditClick = {
+                    draftPassword = password
+                    editingField = EditableField.PASSWORD
+                },
+                onValidateClick = {
+                    password = draftPassword
+                    editingField = null
+                }
             )
         }
 
@@ -179,33 +213,56 @@ private fun FieldWithEdit(
     onValueChange: (String) -> Unit,
     placeholder: String,
     leadingDrawable: Int,
+    isEditing: Boolean,
     onEditClick: () -> Unit,
+    onValidateClick: () -> Unit,
     isPassword: Boolean = false
 ) {
-    Box(modifier = Modifier.fillMaxWidth()) {
-        RoundedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            placeholder = placeholder,
-            leadingIcon = painterResource(leadingDrawable),
-            fieldColor = BrownPrimary,
-            hintColor = Color(0xFFEADAC0), // beige clair pour la hint
-            textColor = Color.White,
-            iconSize = 22.dp,
-            visualTransformation = if (isPassword) androidx.compose.ui.text.input.PasswordVisualTransformation()
-            else androidx.compose.ui.text.input.VisualTransformation.None
-        )
+    Column(modifier = Modifier.fillMaxWidth()) {
 
-        // Petit crayon à droite (superposé)
-        Icon(
-            painter = painterResource(R.drawable.ic_edit), // crayon
-            contentDescription = "Edit",
-            tint = BlueSoft,
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(end = 18.dp)
-                .size(20.dp)
-                .clickable { onEditClick() }
-        )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            RoundedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                placeholder = placeholder,
+                leadingIcon = painterResource(leadingDrawable),
+                fieldColor = BrownPrimary,
+                hintColor = Color(0xFFEADAC0),
+                textColor = Color.White,
+                iconSize = 22.dp,
+                readOnly = !isEditing, // ✅ IMPORTANT
+                visualTransformation = if (isPassword)
+                    androidx.compose.ui.text.input.PasswordVisualTransformation()
+                else
+                    androidx.compose.ui.text.input.VisualTransformation.None
+            )
+
+            Icon(
+                painter = painterResource(R.drawable.ic_edit),
+                contentDescription = "Edit",
+                tint = BlueSoft,
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 18.dp)
+                    .size(20.dp)
+                    .clickable { onEditClick() }
+            )
+        }
+
+        if (isEditing) {
+            Spacer(Modifier.height(10.dp))
+
+            androidx.compose.material3.Button(
+                onClick = onValidateClick,
+                shape = RoundedCornerShape(50),
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .height(40.dp)
+            ) {
+                Text("Valider", color = Color.White, fontWeight = FontWeight.SemiBold)
+            }
+        }
     }
 }
+
