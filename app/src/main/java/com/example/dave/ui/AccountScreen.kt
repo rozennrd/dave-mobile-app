@@ -20,7 +20,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.dave.R
+import com.example.dave.models.LoginModel
 import com.example.dave.ui.components.NavBar
 import com.example.dave.ui.components.DaveNavItem
 import com.example.dave.ui.components.RoundedTextField
@@ -31,14 +34,26 @@ fun AccountScreen(
     modifier: Modifier = Modifier,
     initialName: String = "Prénom Nom",
     initialEmail: String = "email@blabla.com",
-    onBackOrLogout: () -> Unit = {},
     onHomeClick: () -> Unit = {},
     onAddClick: () -> Unit = {},
     onAccountClick: () -> Unit = {},
+    navController: NavController,
+    loginModel: LoginModel = viewModel()
 ) {
     var name by remember { mutableStateOf(initialName) }
     var email by remember { mutableStateOf(initialEmail) }
     var password by remember { mutableStateOf("••••••••") }
+
+    val currentUser by loginModel.currentUser.collectAsState()
+
+    LaunchedEffect(currentUser) {
+        if (currentUser == null) {
+            navController.navigate("login") {
+                popUpTo("account") { inclusive = true }
+            }
+        }
+    }
+
 
     Box(
         modifier = modifier
@@ -65,7 +80,7 @@ fun AccountScreen(
                     tint = BlueSoft,
                     modifier = Modifier
                         .size(34.dp)
-                        .clickable { onBackOrLogout() }
+                        .clickable { loginModel.signOut() }
                 )
             }
 
