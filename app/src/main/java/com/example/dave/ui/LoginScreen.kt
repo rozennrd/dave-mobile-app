@@ -25,12 +25,14 @@ import com.example.dave.ui.components.RoundedTextField
 import com.example.dave.ui.theme.*
 import kotlinx.coroutines.launch
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 
 
 @Composable
 fun LoginScreen(
+    navController: NavController,
     loginModel: LoginModel = viewModel(),
-    onLoginSuccess: () -> Unit = {}
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -40,7 +42,11 @@ fun LoginScreen(
 
     // Navigation automatique si user déjà connecté
     LaunchedEffect(currentUser) {
-        if (currentUser != null) onLoginSuccess()
+        if (currentUser != null) {
+            navController.navigate("account") {
+                popUpTo("login") { inclusive = true }
+            }
+        }
     }
 
     val isLoading = authState is LoginModel.AuthState.Loading
@@ -156,6 +162,7 @@ fun LoginScreen(
 @Composable
 fun LoginScreenPreview() {
     DaveTheme {
-        LoginScreen()
+        LoginScreen(navController = rememberNavController())
     }
 }
+
