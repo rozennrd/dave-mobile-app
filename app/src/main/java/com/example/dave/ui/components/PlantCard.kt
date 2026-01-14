@@ -106,7 +106,7 @@ fun PlantCardPreview() {
     DaveTheme {
         PlantCard(
             plant = Plant(
-                1,
+            "1",
                 "Pyramidalis Silver Fir",
                 listOf("Abies alba 'Pyramidalis'"),
                 "Mélissa",

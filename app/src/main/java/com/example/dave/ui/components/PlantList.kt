@@ -232,7 +232,7 @@ fun PlantListErrorPreview() {
 fun PlantListSuccessPreview() {
     val samplePlants = listOf(
         Plant(
-            id = 1,
+            id = "1",
             commonName = "Pyramidalis Silver Fir",
             scientificName = listOf("Abies alba 'Pyramidalis'"),
             plantName = "Silver Fir",
@@ -250,7 +250,7 @@ fun PlantListSuccessPreview() {
             notes = "Evergreen conifer with pyramidal shape"
         ),
         Plant(
-            id = 2,
+            id = "2",
             commonName = "Peace Lily",
             scientificName = listOf("Spathiphyllum wallisii"),
             plantName = "Peace Lily",
@@ -268,7 +268,7 @@ fun PlantListSuccessPreview() {
             notes = "Great for purifying indoor air"
         ),
         Plant(
-            id = 3,
+            id = "3",
             commonName = "Snake Plant",
             scientificName = listOf("Sansevieria trifasciata", "Dracaena trifasciata"),
             plantName = "Mother-in-law's Tongue",
@@ -286,7 +286,7 @@ fun PlantListSuccessPreview() {
             notes = "Nearly indestructible, great for beginners"
         ),
         Plant(
-            id = 4,
+            id = "4",
             commonName = "English Lavender",
             scientificName = listOf("Lavandula angustifolia"),
             plantName = "Lavender",
@@ -304,7 +304,7 @@ fun PlantListSuccessPreview() {
             notes = "Fragrant flowers, attracts pollinators"
         ),
         Plant(
-            id = 5,
+            id = "5",
             commonName = "Golden Pothos",
             scientificName = listOf("Epipremnum aureum"),
             plantName = "Devil's Ivy",
@@ -340,7 +340,7 @@ fun PlantListSuccessPreview() {
 @Composable
 fun OnePlantCardPreview() {
     val samplePlant = Plant(
-        id = 1,
+        id = "1",
         commonName = "Pyramidalis Silver Fir",
         scientificName = listOf("Abies alba 'Pyramidalis'"),
         plantName = "Silver Fir",
@@ -376,7 +376,7 @@ fun OnePlantCardPreview() {
 fun PlantListGridPreview() {
     val samplePlants = listOf(
         Plant(
-            id = 1,
+            id = "1",
             commonName = "Silver Fir",
             scientificName = listOf("Abies alba"),
             plantName = "Fir Tree",
@@ -394,7 +394,7 @@ fun PlantListGridPreview() {
             notes = "Tall evergreen"
         ),
         Plant(
-            id = 2,
+            id = "2",
             commonName = "Peace Lily",
             scientificName = listOf("Spathiphyllum"),
             plantName = "Lily",
@@ -412,7 +412,7 @@ fun PlantListGridPreview() {
             notes = "Indoor plant"
         ),
         Plant(
-            id = 3,
+            id = "3",
             commonName = "Snake Plant",
             scientificName = listOf("Sansevieria"),
             plantName = "Snake",
@@ -430,7 +430,7 @@ fun PlantListGridPreview() {
             notes = "Hardy indoor"
         ),
         Plant(
-            id = 4,
+            id = "4",
             commonName = "Lavender",
             scientificName = listOf("Lavandula"),
             plantName = "Lavender",

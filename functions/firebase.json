@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs24",
+    "region": "europe-southwest1"
+  }
+}

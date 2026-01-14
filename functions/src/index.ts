@@ -1,14 +1,20 @@
 /* eslint-disable */
 
-import * as functions from "firebase-functions";
-import * as admin from "firebase-admin";
-admin.initializeApp(); // Ensure this is initialized once at the top of your index.ts
+import { onCall, HttpsError, CallableRequest } from "firebase-functions/v2/https";
+import { initializeApp } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
 
-const db = admin.firestore(); // Get a reference to Firestore
+initializeApp();
+const db = getFirestore();
 
-// Define the Plant model interface for type safety
+const REGION = "europe-southwest1";
+
+/* =========================
+   Models
+========================= */
+
 interface Plant {
-  id?: int;
+  id?: string;
   common_name: string;
   scientific_name: string[];
   plant_name?: string;
@@ -24,154 +30,224 @@ interface Plant {
   drought_tolerant?: boolean;
   soil?: string[];
   notes?: string;
-  ownerId: string; // Crucial for linking to users
+  ownerId: string;
 }
 
-// Helper function to check authentication and get UID
-function assertAuthenticated(request: functions.https.CallableRequest): string {
+/* =========================
+   Helpers
+========================= */
+
+function assertAuthenticated(request: CallableRequest): string {
   if (!request.auth) {
-    throw new functions.https.HttpsError("unauthenticated",
-        "The function must be called while authenticated.");
+    throw new HttpsError(
+      "unauthenticated",
+      "The function must be called while authenticated."
+    );
   }
   return request.auth.uid;
 }
 
-// --- 1. Create a Plant (Callable Function) ---
-export const createPlant = functions.https.onCall(async (request) => {
-  const userId = assertAuthenticated(request);
-  const data = request.data as Omit<Plant, 'id' | 'ownerId'>;
+/* =========================
+   1. Create Plant
+========================= */
 
-  // Basic validation for required fields
-  if (!data.common_name || !data.scientific_name) {
-    throw new functions.https.HttpsError("invalid-argument",
-        "Missing required plant fields: common_name and scientific_name.");
+export const createPlant = onCall(
+  { region: REGION },
+  async (request) => {
+    const userId = assertAuthenticated(request);
+    const data = request.data as Partial<Plant>;
+
+    if (!data.common_name || !data.scientific_name) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Missing required fields: common_name, scientific_name"
+      );
+    }
+
+    const docRef = await db
+      .collection("users")
+      .doc(userId)
+      .collection("plants")
+      .add({
+        ...data,
+        ownerId: userId,
+      });
+
+    return { id: docRef.id };
   }
+);
 
-  const plantDataToSave: Plant = {
-    ...data,
-    ownerId: userId // Link the plant to the authenticated user
-  };
+/* =========================
+   2. Get Plants
+========================= */
 
-  try {
-    const docRef = await db.collection("plants").add(plantDataToSave);
-    return {id: docRef.id, message: "Plant created successfully!"};
-  } catch (error: any) {
-    console.error("Error creating plant:", error);
-    throw new functions.https.HttpsError("internal", `Error creating plant: ${error.message}`);
+export const getPlants = onCall(
+  { region: REGION },
+  async (request) => {
+    const userId = assertAuthenticated(request);
+
+    try {
+      const snapshot = await db
+        .collection("users")
+        .doc(userId)
+        .collection("plants")
+        .get();
+
+      if (snapshot.empty) {
+        return [];
+      }
+
+      return snapshot.docs.map((doc) => {
+        const data = doc.data() as Plant;
+        return {
+          id: doc.id,
+          ...data,
+          scientific_name: data.scientific_name ?? [],
+          sunlight: data.sunlight ?? [],
+          soil: data.soil ?? [],
+        };
+      });
+    } catch (error: unknown) {
+      console.error("Error fetching plants:", error);
+
+      const message =
+        error instanceof Error ? error.message : "Unknown error";
+
+      throw new HttpsError(
+        "internal",
+        `Error fetching plants: ${message}`
+      );
+    }
   }
-});
+);
 
-// --- 2. Read Plants (Callable Function) ---
-// This function can fetch all plants owned by the user, or a specific plant by ID
-export const getPlants = functions.https.onCall(async (request) => {
-  const userId = assertAuthenticated(request);
-  const data = request.data as {id?: string};
+/* =========================
+   3. Update Plant
+========================= */
 
-  try {
-    if (data.id) {
-      // Get a single plant by ID, and ensure it belongs to the user
-      const plantDoc = await db.collection("plants").doc(data.id).get();
+export const updatePlant = onCall(
+  { region: REGION },
+  async (request) => {
+    const userId = assertAuthenticated(request);
+    const data = request.data as {
+      id: string;
+      updates: Partial<Omit<Plant, "id" | "ownerId">>;
+    };
+
+    if (!data.id) {
+      throw new HttpsError("invalid-argument", "Plant ID is required.");
+    }
+
+    if (!data.updates || Object.keys(data.updates).length === 0) {
+      throw new HttpsError(
+        "invalid-argument",
+        "No update data provided."
+      );
+    }
+
+    if ("ownerId" in data.updates) {
+      throw new HttpsError(
+        "permission-denied",
+        "Cannot change plant owner."
+      );
+    }
+
+    try {
+      const plantRef = db
+        .collection("users")
+        .doc(userId)
+        .collection("plants")
+        .doc(data.id);
+
+      const plantDoc = await plantRef.get();
 
       if (!plantDoc.exists) {
-        throw new functions.https.HttpsError("not-found", "Plant not found.");
+        throw new HttpsError("not-found", "Plant not found.");
       }
+
       const plant = plantDoc.data() as Plant;
 
       if (plant.ownerId !== userId) {
-        throw new functions.https.HttpsError('permission-denied',
-            'You do not have permission to access this plant.');
+        throw new HttpsError(
+          "permission-denied",
+          "You do not have permission to update this plant."
+        );
       }
 
-      return {id: plantDoc.id, ...plant};
-    } else {
-      // Get all plants owned by the user
-      const snapshot = await db.collection("plants")
-                                .where("ownerId", "==", userId)
-                                .get();
-      const plants: Plant[] = [];
-      snapshot.forEach(doc => {
-        plants.push({id: doc.id, ...doc.data() as Plant});
-      });
-      return plants;
+      await plantRef.update(data.updates);
+
+      return { message: "Plant updated successfully!" };
+    } catch (error: unknown) {
+      console.error("Error updating plant:", error);
+
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+
+      const message =
+        error instanceof Error ? error.message : "Unknown error";
+
+      throw new HttpsError(
+        "internal",
+        `Error updating plant: ${message}`
+      );
     }
-  } catch (error: any) {
-    console.error("Error fetching plants:", error);
-    // Re-throw HttpsError directly, or wrap other errors
-    if (error.code && error.details) throw error;
-    throw new functions.https.HttpsError("internal", `Error fetching plants: ${error.message}`);
   }
-});
+);
 
-// --- 3. Update a Plant (Callable Function) ---
-export const updatePlant = functions.https.onCall(async (request) => {
-  const userId = assertAuthenticated(request);
-  const data = request.data as { id: string, updates: Partial<Omit<Plant, 'id' | 'ownerId'>> };
-  const plantId = data.id;
-  const updates = data.updates;
+/* =========================
+   4. Delete Plant
+========================= */
 
-  if (!plantId) {
-    throw new functions.https.HttpsError("invalid-argument", "Plant ID is required.");
-  }
-  if (!updates || Object.keys(updates).length === 0) {
-    throw new functions.https.HttpsError("invalid-argument", "No update data provided.");
-  }
-  // Prevent users from trying to change the ownerId directly
-  if ('ownerId' in updates) {
-      throw new functions.https.HttpsError("permission-denied", "Cannot change plant owner.");
-  }
+export const deletePlant = onCall(
+  { region: REGION },
+  async (request) => {
+    const userId = assertAuthenticated(request);
+    const data = request.data as { id: string };
 
-  try {
-    const plantRef = db.collection("plants").doc(plantId);
-    const plantDoc = await plantRef.get();
-
-    if (!plantDoc.exists) {
-      throw new functions.https.HttpsError("not-found", "Plant not found.");
-    }
-    const plant = plantDoc.data() as Plant;
-
-    if (plant.ownerId !== userId) {
-      throw new functions.https.HttpsError("permission-denied",
-          "You do not have permission to update this plant.");
+    if (!data.id) {
+      throw new HttpsError("invalid-argument", "Plant ID is required.");
     }
 
-    await plantRef.update(updates);
-    return { message: "Plant updated successfully!" };
-  } catch (error: any) {
-    console.error("Error updating plant:", error);
-    if (error.code && error.details) throw error;
-    throw new functions.https.HttpsError("internal", `Error updating plant: ${error.message}`);
-  }
-});
+    try {
+      const plantRef = db
+        .collection("users")
+        .doc(userId)
+        .collection("plants")
+        .doc(data.id);
 
-// --- 4. Delete a Plant (Callable Function) ---
-export const deletePlant = functions.https.onCall(async (request) => {
-  const userId = assertAuthenticated(request);
-  const data = request.data as {id: string};
-  const plantId = data.id;
+      const plantDoc = await plantRef.get();
 
-  if (!plantId) {
-    throw new functions.https.HttpsError("invalid-argument", "Plant ID is required.");
-  }
+      if (!plantDoc.exists) {
+        throw new HttpsError("not-found", "Plant not found.");
+      }
 
-  try {
-    const plantRef = db.collection("plants").doc(plantId);
-    const plantDoc = await plantRef.get();
+      const plant = plantDoc.data() as Plant;
 
-    if (!plantDoc.exists) {
-      throw new functions.https.HttpsError("not-found", "Plant not found.");
+      if (plant.ownerId !== userId) {
+        throw new HttpsError(
+          "permission-denied",
+          "You do not have permission to delete this plant."
+        );
+      }
+
+      await plantRef.delete();
+
+      return { message: "Plant deleted successfully!" };
+    } catch (error: unknown) {
+      console.error("Error deleting plant:", error);
+
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+
+      const message =
+        error instanceof Error ? error.message : "Unknown error";
+
+      throw new HttpsError(
+        "internal",
+        `Error deleting plant: ${message}`
+      );
     }
-    const plant = plantDoc.data() as Plant;
-
-    if (plant.ownerId !== userId) {
-      throw new functions.https.HttpsError("permission-denied",
-          "You do not have permission to delete this plant.");
-    }
-
-    await plantRef.delete();
-    return { message: "Plant deleted successfully!" };
-  } catch (error: any) {
-    console.error("Error deleting plant:", error);
-    if (error.code && error.details) throw error;
-    throw new functions.https.HttpsError("internal", `Error deleting plant: ${error.message}`);
   }
-});
+);

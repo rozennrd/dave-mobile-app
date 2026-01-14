@@ -1,7 +1,7 @@
 package com.example.dave.models
 
 data class Plant(
-    val id: Number,
+    val id: String,
     val commonName: String,
     val scientificName: List<String>,
     val plantName: String?,
@@ -16,5 +16,5 @@ data class Plant(
     val poisonousToPets: Boolean?,
     val droughtTolerant: Boolean?,
     val soil: List<String>?,
-    val notes: String?,
+    val notes: String?
 )
