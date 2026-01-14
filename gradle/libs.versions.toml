@@ -11,6 +11,8 @@ material3 = "1.4.0"
 firebaseFunctionsKtx = "22.1.0"
 navigationRuntimeKtx = "2.9.6"
 navigationCompose = "2.9.6"
+firebaseFirestoreKtx = "26.0.2"
+firebaseDatabaseKtx = "22.0.1"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
