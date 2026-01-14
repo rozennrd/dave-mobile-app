@@ -11,34 +11,47 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.dave.ui.AccountScreen
 import com.example.dave.ui.LoginScreen
+import com.example.dave.ui.PlantListScreen
 import com.example.dave.ui.theme.DaveTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-
+        enableEdgeToEdge()
         setContent {
             DaveTheme {
                 val navController = rememberNavController()
 
                 NavHost(
                     navController = navController,
-                    startDestination = "login"
+                    startDestination = "myPlants"
                 ) {
                     composable("login") {
                         LoginScreen(navController = navController)
                     }
 
                     composable("account") {
-                        AccountScreen(navController = navController)
+                        AccountScreen(
+                            navController = navController,
+                            onHomeClick = { navController.navigate("myPlants") },
+                            onAccountClick = { /* already on account */ },
+                            onAddClick = { /* TODO: add plant screen */ }
+                        )
+                    }
+
+                    composable("myPlants") {
+                        PlantListScreen(
+                            navController = navController,
+                            onHomeClick = { /* already on home */ },
+                            onAccountClick = { navController.navigate("account") },
+                            onAddClick = { /* TODO: add plant screen */ }
+                        )
                     }
                 }
             }
         }
     }
 }
-
 
 @Preview
 @Composable
