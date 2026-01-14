@@ -138,7 +138,10 @@ fun PlantDetailScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                PlantInfoRow(label = "Scientific name", value = plant.scientificName.firstOrNull() ?: "Unknown")
+                PlantInfoRow(
+                    label = "Scientific name",
+                    value = plant.scientificName.firstOrNull() ?: "Unknown"
+                )
                 PlantInfoRow(label = "Family", value = plant.family ?: "Unknown")
                 PlantInfoRow(label = "Type", value = plant.type ?: "Unknown")
 
@@ -167,8 +170,14 @@ fun PlantDetailScreen(
                         fontFamily = SulphurPoint
                     )
                     Icon(
-                        imageVector = Icons.Default.Home,
-                        contentDescription = null,
+                        painter = painterResource(
+                            id = if (plant.indoor == true) {
+                                R.drawable.house_24dp
+                            } else {
+                                R.drawable.nature_24dp    // nature
+                            }
+                        ),
+                        contentDescription = if (plant.indoor == true) "Indoor plant" else "Outdoor plant",
                         tint = BlueSoft,
                         modifier = Modifier.size(20.dp)
                     )
