@@ -22,6 +22,7 @@ fun RoundedTextField(
     onValueChange: (String) -> Unit,
     placeholder: String,
     leadingIcon: Painter,
+    readOnly: Boolean = false,
     fieldColor: Color,
     hintColor: Color,
     textColor: Color,
@@ -42,6 +43,7 @@ fun RoundedTextField(
                 modifier = Modifier.size(iconSize)
             )
         },
+        readOnly = readOnly,
         colors = TextFieldDefaults.colors(
             focusedContainerColor = fieldColor,
             unfocusedContainerColor = fieldColor,

@@ -17,17 +17,20 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import kotlinx.coroutines.launch
 import com.example.dave.R
 import com.example.dave.models.LoginModel
 import com.example.dave.ui.components.NavBar
 import com.example.dave.ui.components.DaveNavItem
 import com.example.dave.ui.components.RoundedTextField
 import com.example.dave.ui.theme.*
+
+enum class EditableField { NAME, EMAIL, PASSWORD }
+
 
 @Composable
 fun AccountScreen(
@@ -46,6 +49,20 @@ fun AccountScreen(
 
     val currentUser by loginModel.currentUser.collectAsState()
 
+
+    // Drafts (ce qu’on modifie pendant l’édition)
+    var draftName by remember { mutableStateOf(name) }
+    var draftEmail by remember { mutableStateOf(email) }
+    var draftPassword by remember { mutableStateOf(password) }
+
+    // Sync depuis Firebase quand le user change
+    LaunchedEffect(currentUser) {
+        name = currentUser?.displayName.orEmpty()
+        email = currentUser?.email.orEmpty()
+    }
+
+    // Quel champ est en édition (null = aucun)
+    var editingField by remember { mutableStateOf<EditableField?>(null) }
     LaunchedEffect(currentUser) {
         if (currentUser == null) {
             navController.navigate("login") {
@@ -53,6 +70,10 @@ fun AccountScreen(
             }
         }
     }
+
+    val scope = rememberCoroutineScope()
+    val authState by loginModel.authState.collectAsState()
+    val errorMessage = (authState as? LoginModel.AuthState.Error)?.message
 
 
     Box(
@@ -68,7 +89,7 @@ fun AccountScreen(
                 .padding(bottom = 120.dp), // laisse de la place pour la navbar + bouton +
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(50.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -128,37 +149,63 @@ fun AccountScreen(
                     fontFamily = Jost,
                     fontWeight = FontWeight.ExtraLight
                 )
+                if (errorMessage != null) {
+                    Text(text = errorMessage, color = Color(0xFFD32F2F), fontSize = 13.sp)
+                    Spacer(Modifier.height(8.dp))
+                }
+
             }
 
             Spacer(Modifier.height(12.dp))
 
             FieldWithEdit(
-                value = name,
-                onValueChange = { name = it },
-                placeholder = "Nom  Prénom",
+                value = if (editingField == EditableField.NAME) draftName else name,
+                onValueChange = { },
+                placeholder = name.ifBlank { "Nom Prénom" },
                 leadingDrawable = R.drawable.ic_user,
-                onEditClick = {}
+                isEditing = false,
+                showEditIcon = false,
+                forceReadOnly = true,
+                onEditClick = { },
+                onValidateClick = { }
             )
 
             Spacer(Modifier.height(12.dp))
 
             FieldWithEdit(
                 value = email,
-                onValueChange = { email = it },
-                placeholder = "email@blabla.com",
+                onValueChange = { },
+                placeholder = email,
                 leadingDrawable = R.drawable.ic_at,
-                onEditClick = {}
+                isEditing = false,
+                showEditIcon = false,
+                forceReadOnly = true,
+                onEditClick = { },
+                onValidateClick = { }
             )
 
             Spacer(Modifier.height(12.dp))
 
             FieldWithEdit(
-                value = password,
-                onValueChange = { password = it },
+                value = if (editingField == EditableField.PASSWORD) draftPassword else password,
+                onValueChange = { draftPassword = it },
                 placeholder = "••••••••",
                 leadingDrawable = R.drawable.ic_lock,
-                onEditClick = {},
-                isPassword = true
+                isPassword = true,
+                isEditing = editingField == EditableField.PASSWORD,
+                onEditClick = {
+                    draftPassword = password
+                    editingField = EditableField.PASSWORD
+                },
+                onValidateClick = {
+                    scope.launch {
+                        val res = loginModel.updatePassword(draftPassword)
+                        if (res.isSuccess) {
+                            editingField = null
+                            password = "••••••••"
+                        }
+                    }
+                }
             )
         }
 
@@ -179,33 +226,60 @@ private fun FieldWithEdit(
     onValueChange: (String) -> Unit,
     placeholder: String,
     leadingDrawable: Int,
+    isEditing: Boolean,
     onEditClick: () -> Unit,
-    isPassword: Boolean = false
+    onValidateClick: () -> Unit,
+    isPassword: Boolean = false,
+    showEditIcon: Boolean = true,
+    forceReadOnly: Boolean = false
 ) {
-    Box(modifier = Modifier.fillMaxWidth()) {
-        RoundedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            placeholder = placeholder,
-            leadingIcon = painterResource(leadingDrawable),
-            fieldColor = BrownPrimary,
-            hintColor = Color(0xFFEADAC0), // beige clair pour la hint
-            textColor = Color.White,
-            iconSize = 22.dp,
-            visualTransformation = if (isPassword) androidx.compose.ui.text.input.PasswordVisualTransformation()
-            else androidx.compose.ui.text.input.VisualTransformation.None
-        )
+    Column(modifier = Modifier.fillMaxWidth()) {
 
-        // Petit crayon à droite (superposé)
-        Icon(
-            painter = painterResource(R.drawable.ic_edit), // crayon
-            contentDescription = "Edit",
-            tint = BlueSoft,
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(end = 18.dp)
-                .size(20.dp)
-                .clickable { onEditClick() }
-        )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            RoundedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                placeholder = placeholder,
+                leadingIcon = painterResource(leadingDrawable),
+                fieldColor = BrownPrimary,
+                hintColor = Color(0xFFEADAC0),
+                textColor = Color.White,
+                iconSize = 22.dp,
+                readOnly = forceReadOnly || !isEditing,
+                        visualTransformation = if (isPassword)
+                    androidx.compose.ui.text.input.PasswordVisualTransformation()
+                else
+                    androidx.compose.ui.text.input.VisualTransformation.None
+            )
+
+            if (showEditIcon) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_edit),
+                    contentDescription = "Edit",
+                    tint = BlueSoft,
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 18.dp)
+                        .size(20.dp)
+                        .clickable { onEditClick() }
+                )
+            }
+        }
+
+        if (isEditing) {
+            Spacer(Modifier.height(10.dp))
+
+            androidx.compose.material3.Button(
+                onClick = onValidateClick,
+                shape = RoundedCornerShape(50),
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .height(40.dp)
+            ) {
+                Text("Valider", color = Color.White, fontWeight = FontWeight.SemiBold)
+            }
+        }
     }
 }
+
