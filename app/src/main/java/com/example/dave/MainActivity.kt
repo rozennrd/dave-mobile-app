@@ -12,6 +12,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.dave.ui.AccountScreen
 import com.example.dave.ui.LoginScreen
 import com.example.dave.ui.PlantListScreen
+import com.example.dave.ui.screens.PlantDetail
+import com.example.dave.ui.screens.PlantDetailScreen
 import com.example.dave.ui.theme.DaveTheme
 
 class MainActivity : ComponentActivity() {
@@ -35,7 +37,7 @@ class MainActivity : ComponentActivity() {
                             navController = navController,
                             onHomeClick = { navController.navigate("myPlants") },
                             onAccountClick = { /* already on account */ },
-                            onAddClick = { /* TODO: add plant screen */ }
+                            onAddClick = { navController.navigate("addPlant") }
                         )
                     }
 
@@ -44,7 +46,34 @@ class MainActivity : ComponentActivity() {
                             navController = navController,
                             onHomeClick = { /* already on home */ },
                             onAccountClick = { navController.navigate("account") },
-                            onAddClick = { /* TODO: add plant screen */ }
+                            onAddClick = { navController.navigate("addPlant") }
+                        )
+                    }
+
+                    composable("addPlant") {
+                        PlantDetailScreen(
+                            plant = PlantDetail(
+                                id = 0,
+                                surname = null,
+                                commonName = "Plant name",
+                                scientificName = emptyList(),
+                                family = null,
+                                type = null,
+                                imageUrl = null,
+                                careLevel = null,
+                                sunlight = null,
+                                watering = null,
+                                indoor = null,
+                                poisonousToHumans = null,
+                                poisonousToPets = null,
+                                droughtTolerant = null,
+                                soil = null,
+                                notes = null
+                            ),
+                            isAddMode = true,
+                            onHomeClick = { navController.navigate("myPlants") },
+                            onAddClick = { /* already on addPlant */ },
+                            onAccountClick = { navController.navigate("account") }
                         )
                     }
                 }

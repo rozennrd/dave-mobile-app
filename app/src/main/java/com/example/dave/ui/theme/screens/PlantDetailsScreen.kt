@@ -2,12 +2,11 @@ package com.example.dave.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -54,14 +53,30 @@ fun PlantDetailScreen(
     onHomeClick: () -> Unit = {},
     onAddClick: () -> Unit = {},
     onAccountClick: () -> Unit = {},
+    onAddPlantClick: () -> Unit = {},
+    isAddMode: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    var isAddMode by remember { mutableStateOf(isAddMode) }
     var isEditMode by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showSaveDialog by remember { mutableStateOf(false) }
+    var showDropdown by remember { mutableStateOf(false) }
 
     var editedSurname by remember { mutableStateOf(plant.surname ?: "") }
     var editedNotes by remember { mutableStateOf(plant.notes ?: "") }
+
+    var selectedPlantName by remember { mutableStateOf(plant.commonName) }
+
+    // Liste de plantes pour la dropdown => A ENLEVER PLUS TARD
+    val plantNames = listOf(
+        "European Silver Fir",
+        "Monstera Deliciosa",
+        "Aloe Vera",
+        "Snake Plant",
+        "Pothos",
+        "Rubber Plant"
+    )
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(
@@ -78,13 +93,77 @@ fun PlantDetailScreen(
                     .background(GreenPrimary),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = plant.commonName,
-                    color = Color.White,
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = SulphurPoint
-                )
+                if (isAddMode) {
+                    // Dropdown pour sélectionner une plante
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp)
+                            .clickable { showDropdown = !showDropdown },
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.search_24dp),
+                                contentDescription = "Search",
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
+                            )
+                            Text(
+                                text = selectedPlantName,
+                                color = Color.White,
+                                fontSize = 32.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = SulphurPoint
+                            )
+                        }
+                        Icon(
+                            painter = painterResource(
+                                if (showDropdown) R.drawable.arrow_drop_up_24dp else R.drawable.arrow_drop_down_24dp
+                            ),
+                            contentDescription = "Toggle dropdown",
+                            tint = Color.White,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+
+                    // Liste déroulante
+                    DropdownMenu(
+                        expanded = showDropdown,
+                        onDismissRequest = { showDropdown = false },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White)
+                    ) {
+                        plantNames.forEach { plantName ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = plantName,
+                                        fontFamily = SulphurPoint,
+                                        fontSize = 18.sp
+                                    )
+                                },
+                                onClick = {
+                                    selectedPlantName = plantName
+                                    showDropdown = false
+                                }
+                            )
+                        }
+                    }
+                } else {
+                    Text(
+                        text = selectedPlantName,
+                        color = Color.White,
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = SulphurPoint
+                    )
+                }
             }
 
             // Image de la plante
@@ -174,7 +253,7 @@ fun PlantDetailScreen(
                             id = if (plant.indoor == true) {
                                 R.drawable.house_24dp
                             } else {
-                                R.drawable.nature_24dp    // nature
+                                R.drawable.nature_24dp
                             }
                         ),
                         contentDescription = if (plant.indoor == true) "Indoor plant" else "Outdoor plant",
@@ -301,8 +380,38 @@ fun PlantDetailScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Boutons Delete/Modify ou Save
-                if (isEditMode) {
+                // Buttons Delete/Modify/Save or Add Plant
+                if (isAddMode) {
+                    val canAddPlant = selectedPlantName != "Plant name"
+                    Button(
+                        onClick = {
+                            isAddMode = false
+                            onAddPlantClick()
+                        },
+                        enabled = canAddPlant, // Le bouton s'active si canAddPlant est vrai
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = GreenPrimary,
+                            // Précision de la couleur du bouton quand il est désactivé
+                            disabledContainerColor = Color.Gray.copy(alpha = 0.5f)
+                        ),
+                        shape = RoundedCornerShape(50),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.add),
+                            contentDescription = "Add plant",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Add plant",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontFamily = SulphurPoint
+                        )
+                    }
+                } else if (isEditMode) {
                     Button(
                         onClick = { showSaveDialog = true },
                         colors = ButtonDefaults.buttonColors(

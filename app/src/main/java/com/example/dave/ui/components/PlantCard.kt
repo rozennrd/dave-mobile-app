@@ -1,6 +1,5 @@
 package com.example.dave.ui.components
 
-import LevelMaintenanceSmallDisplay
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -28,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.example.dave.R
 import com.example.dave.models.Plant
 import com.example.dave.ui.theme.DaveTheme
+import com.example.dave.ui.theme.components.LevelMaintenanceSmallDisplay
 
 @Composable
 fun PlantCard(plant: Plant, onClick: () -> Unit = {}, modifier: Modifier = Modifier) {
