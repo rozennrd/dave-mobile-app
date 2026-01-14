@@ -160,44 +160,28 @@ fun AccountScreen(
 
             FieldWithEdit(
                 value = if (editingField == EditableField.NAME) draftName else name,
-                onValueChange = { draftName = it },
-                placeholder = "Nom  Prénom",
+                onValueChange = { },
+                placeholder = name.ifBlank { "Nom Prénom" },
                 leadingDrawable = R.drawable.ic_user,
-                isEditing = editingField == EditableField.NAME,
-                onEditClick = {
-                    // quand on clique le crayon : on ouvre l’édition et on init le draft
-                    draftName = name
-                    editingField = EditableField.NAME
-                },
-                onValidateClick = {
-                    name = draftName
-                    editingField = null
-                }
+                isEditing = false,
+                showEditIcon = false,
+                forceReadOnly = true,
+                onEditClick = { },
+                onValidateClick = { }
             )
 
             Spacer(Modifier.height(12.dp))
 
             FieldWithEdit(
-                value = if (editingField == EditableField.EMAIL) draftEmail else email,
-                onValueChange = { draftEmail = it },
+                value = email,
+                onValueChange = { },
                 placeholder = email,
                 leadingDrawable = R.drawable.ic_at,
-                isEditing = editingField == EditableField.EMAIL,
-                onEditClick = {
-                    draftEmail = email
-                    editingField = EditableField.EMAIL
-                },
-                onValidateClick = {
-                    scope.launch {
-                        val res = loginModel.updateEmail(draftEmail)
-                        if (res.isSuccess) {
-                            editingField = null
-                        } else {
-                            email = draftEmail
-                            editingField = null
-                        }
-                    }
-                }
+                isEditing = false,
+                showEditIcon = false,
+                forceReadOnly = true,
+                onEditClick = { },
+                onValidateClick = { }
             )
 
             Spacer(Modifier.height(12.dp))
@@ -245,7 +229,9 @@ private fun FieldWithEdit(
     isEditing: Boolean,
     onEditClick: () -> Unit,
     onValidateClick: () -> Unit,
-    isPassword: Boolean = false
+    isPassword: Boolean = false,
+    showEditIcon: Boolean = true,
+    forceReadOnly: Boolean = false
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
 
@@ -259,23 +245,25 @@ private fun FieldWithEdit(
                 hintColor = Color(0xFFEADAC0),
                 textColor = Color.White,
                 iconSize = 22.dp,
-                readOnly = !isEditing, // ✅ IMPORTANT
-                visualTransformation = if (isPassword)
+                readOnly = forceReadOnly || !isEditing,
+                        visualTransformation = if (isPassword)
                     androidx.compose.ui.text.input.PasswordVisualTransformation()
                 else
                     androidx.compose.ui.text.input.VisualTransformation.None
             )
 
-            Icon(
-                painter = painterResource(R.drawable.ic_edit),
-                contentDescription = "Edit",
-                tint = BlueSoft,
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(end = 18.dp)
-                    .size(20.dp)
-                    .clickable { onEditClick() }
-            )
+            if (showEditIcon) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_edit),
+                    contentDescription = "Edit",
+                    tint = BlueSoft,
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 18.dp)
+                        .size(20.dp)
+                        .clickable { onEditClick() }
+                )
+            }
         }
 
         if (isEditing) {

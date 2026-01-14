@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.tasks.await
 import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
+import com.google.firebase.auth.UserProfileChangeRequest
 
 class LoginModel : ViewModel() {
     private val auth = FirebaseAuth.getInstance()
@@ -78,7 +79,6 @@ class LoginModel : ViewModel() {
 
             val user = auth.currentUser
                 ?: return Result.failure(IllegalStateException("No user logged in"))
-
             val trimmed = newPassword.trim()
 
             user.updatePassword(trimmed).await()
@@ -97,6 +97,32 @@ class LoginModel : ViewModel() {
         }
     }
 
+    suspend fun updateDisplayName(newName: String): Result<Unit> {
+        return try {
+            _authState.value = AuthState.Loading
+
+            val user = auth.currentUser
+                ?: return Result.failure(IllegalStateException("No user logged in"))
+            val trimmed = newName.trim()
+            val updates = UserProfileChangeRequest.Builder()
+                .setDisplayName(trimmed)
+                .build()
+
+            user.updateProfile(updates).await()
+            user.reload().await()
+
+            _currentUser.value = auth.currentUser
+            _authState.value = AuthState.Success(auth.currentUser)
+
+            Result.success(Unit)
+        } catch (e: FirebaseAuthException) {
+            _authState.value = AuthState.Error("${e.errorCode}: ${e.message}")
+            Result.failure(e)
+        } catch (e: Exception) {
+            _authState.value = AuthState.Error(e.message ?: "Failed to update name")
+            Result.failure(e)
+        }
+    }
 
 
     // Sign Out
