@@ -12,22 +12,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-// Mutation states for operations
-sealed class MutationState {
-    object Idle : MutationState()
-    object Loading : MutationState()
-    object Success : MutationState()
-    data class Error(val message: String) : MutationState()
-}
 
 class PlantViewModel(private val loginModel: LoginModel) : ViewModel() {
 
     private val _plantState = MutableStateFlow<PlantListState>(PlantListState.Loading)
     val plantState: StateFlow<PlantListState> = _plantState
-
-    // Mutation states for operations
-    private val _deleteState = MutableStateFlow<MutationState>(MutationState.Idle)
-    val deleteState: StateFlow<MutationState> = _deleteState
 
     private val _currentPlant = MutableStateFlow<Plant?>(null)
     val currentPlant: StateFlow<Plant?> = _currentPlant
@@ -236,11 +225,6 @@ class PlantViewModel(private val loginModel: LoginModel) : ViewModel() {
             }
     }
 
-    // Reset delete state to Idle
-    fun resetDeleteState() {
-        _deleteState.value = MutationState.Idle
-    }
-
     fun initializeSamplePlants() {
         viewModelScope.launch {
             try {
@@ -266,5 +250,9 @@ class PlantViewModel(private val loginModel: LoginModel) : ViewModel() {
                 Log.e("PlantViewModel", "Error initializing sample plants", e)
             }
         }
+    }
+
+    fun refreshPlants() {
+        fetchPlants()
     }
 }
