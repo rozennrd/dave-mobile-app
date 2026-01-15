@@ -55,7 +55,7 @@ data class PlantDetail(
 fun PlantDetailScreen(
     plant: PlantDetail,
     onDeleteClick: () -> Unit = {},
-    onModifyClick: (surname: String, notes: String) -> Unit = { _, _ ->},
+    onModifyClick: (surname: String, notes: String) -> Unit = { _, _ -> },
     onHomeClick: () -> Unit = {},
     plantViewModel: PlantViewModel? = null,
     onAddClick: () -> Unit = {},
@@ -383,7 +383,7 @@ fun PlantDetailScreen(
                                 fontFamily = SulphurPoint
                             )
                             Text(
-                                text = "",
+                                text = currentPlant.notes ?: "No notes available",
                                 color = Color.White,
                                 fontSize = 16.sp,
                                 fontFamily = SulphurPoint,
@@ -547,7 +547,19 @@ fun PlantDetailScreen(
             message = "Are you sure you want to save the modifications to this plant?",
             confirmLabel = "Save",
             onConfirm = {
-                onModifyClick(editedSurname, editedNotes)  // Call the callback with edited data
+                // 1. On appelle le ViewModel pour enregistrer dans Firebase
+                plantViewModel?.updatePlant(
+                    plantId = currentPlant.id.toString(), // On utilise l'ID de la plante
+                    plantName = editedSurname,            // On envoie le nouveau nom
+                    notes = editedNotes                   // On envoie les nouvelles notes
+                )
+
+                // 2. On déclenche le callback de navigation si besoin
+                onModifyClick(editedSurname, editedNotes)
+
+                // 3. On met à jour l'affichage local immédiatement
+                currentPlant = currentPlant.copy(surname = editedSurname, notes = editedNotes)
+
                 isEditMode = false
                 showSaveDialog = false
             },
