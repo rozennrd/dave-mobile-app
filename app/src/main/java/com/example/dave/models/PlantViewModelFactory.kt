@@ -3,6 +3,7 @@ package com.example.dave.models.api
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.dave.models.LoginModel
+import com.example.dave.models.api.PlantViewModel
 
 class PlantViewModelFactory(
     private val loginModel: LoginModel

@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.dp
 import com.example.dave.R
 import com.example.dave.models.Plant
 import com.example.dave.ui.theme.DaveTheme
-import com.example.dave.ui.theme.components.LevelMaintenanceSmallDisplay
 
 @Composable
 fun PlantCard(plant: Plant, onClick: (Plant) -> Unit = {}, modifier: Modifier = Modifier) {

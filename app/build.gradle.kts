@@ -26,12 +26,16 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "PERENUAL_API_KEY", "\"${project.property("PERENUAL_API_KEY")}\"")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "PERENUAL_API_KEY", "\"${project.property("PERENUAL_API_KEY")}\"")
         }
     }
     compileOptions {
@@ -43,6 +47,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 dependencies {

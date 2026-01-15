@@ -1,4 +1,4 @@
-package com.example.dave.ui
+package com.example.dave.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -6,6 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -16,6 +18,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -247,9 +251,9 @@ private fun FieldWithEdit(
                 iconSize = 22.dp,
                 readOnly = forceReadOnly || !isEditing,
                         visualTransformation = if (isPassword)
-                    androidx.compose.ui.text.input.PasswordVisualTransformation()
+                            PasswordVisualTransformation()
                 else
-                    androidx.compose.ui.text.input.VisualTransformation.None
+                    VisualTransformation.None
             )
 
             if (showEditIcon) {
@@ -269,10 +273,10 @@ private fun FieldWithEdit(
         if (isEditing) {
             Spacer(Modifier.height(10.dp))
 
-            androidx.compose.material3.Button(
+            Button(
                 onClick = onValidateClick,
                 shape = RoundedCornerShape(50),
-                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
                 modifier = Modifier
                     .align(Alignment.End)
                     .height(40.dp)

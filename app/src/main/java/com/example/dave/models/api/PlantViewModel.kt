@@ -4,14 +4,13 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dave.models.LoginModel
-import com.example.dave.ui.components.PlantListState
 import com.example.dave.models.Plant
+import com.example.dave.ui.components.PlantListState
 import com.google.firebase.functions.FirebaseFunctions
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-
 
 class PlantViewModel(private val loginModel: LoginModel) : ViewModel() {
 
@@ -228,7 +227,7 @@ class PlantViewModel(private val loginModel: LoginModel) : ViewModel() {
     fun initializeSamplePlants() {
         viewModelScope.launch {
             try {
-                val functions = FirebaseFunctions.getInstance("europe-southwest1")
+                val functions = FirebaseFunctions.Companion.getInstance("europe-southwest1")
                 val initFunction = functions.getHttpsCallable("initializeSamplePlants")
 
                 initFunction.call()

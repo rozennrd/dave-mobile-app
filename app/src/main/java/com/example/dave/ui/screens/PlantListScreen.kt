@@ -1,4 +1,4 @@
-package com.example.dave.ui
+package com.example.dave.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -33,6 +33,7 @@ import com.example.dave.ui.components.NavBar
 import com.example.dave.ui.components.PlantList
 import com.example.dave.ui.theme.GreenPrimary
 import com.example.dave.ui.theme.SulphurPoint
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -88,7 +89,7 @@ fun PlantListScreen(modifier: Modifier = Modifier,
                     plantViewModel.refreshPlants()
                     // Set a timeout to stop refreshing indicator
                     coroutineScope.launch {
-                        kotlinx.coroutines.delay(1500)
+                        delay(1500)
                         isRefreshing = false
                     }
                 },

@@ -1,7 +1,6 @@
 package com.example.dave.ui.screens
 
 import ApiService
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,17 +15,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.SubcomposeAsyncImage
 import com.example.dave.R
 import com.example.dave.models.api.PlantViewModel
-import com.example.dave.ui.theme.components.LevelMaintenance
-import com.example.dave.ui.theme.components.ConfirmActionDialog
+import com.example.dave.ui.components.LevelMaintenance
+import com.example.dave.ui.components.ConfirmActionDialog
 import com.example.dave.ui.theme.*
 import com.example.dave.ui.components.NavBar
 import com.example.dave.ui.components.DaveNavItem
@@ -64,7 +62,8 @@ fun PlantDetailScreen(
     isAddMode: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    val apiService = remember { ApiService() }
+    val context = LocalContext.current
+    val apiService = remember { ApiService(context) }
 
     // 1. On crée une liste d'état qui contiendra nos paires (ID, Nom)
     var apiPlantOptions by remember { mutableStateOf(listOf<Pair<Int, String>>()) }
@@ -588,52 +587,6 @@ fun PlantDetailScreen(
     }
 }
 
-@Composable
-private fun EditableField(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(
-            text = "$label :",
-            color = BrownPrimary,
-            fontSize = 16.sp,
-            fontFamily = SulphurPoint
-        )
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = GreenPrimary,
-                unfocusedBorderColor = BrownPrimary
-            ),
-            textStyle = LocalTextStyle.current.copy(
-                fontFamily = SulphurPoint,
-                fontSize = 16.sp
-            )
-        )
-    }
-}
-
-@Composable
-fun AsyncImage(
-    model: String?,
-    contentDescription: String,
-    modifier: Modifier,
-    contentScale: ContentScale
-) {
-    Box(
-        modifier = modifier.background(Color.LightGray),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Image",
-            color = Color.DarkGray
-        )
-    }
-}
 
 @Composable
 private fun SectionTitle(title: String) {

@@ -1,4 +1,4 @@
-package com.example.dave.ui
+package com.example.dave.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
