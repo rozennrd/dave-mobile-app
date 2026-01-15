@@ -43,7 +43,7 @@ fun LoginScreen(
     // Navigation automatique si user déjà connecté
     LaunchedEffect(currentUser) {
         if (currentUser != null) {
-            navController.navigate("account") {
+            navController.navigate("myPlants") {
                 popUpTo("login") { inclusive = true }
             }
         }
