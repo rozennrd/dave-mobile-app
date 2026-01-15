@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
     kotlin("plugin.serialization") version "2.0.21"
+    id("com.google.firebase.crashlytics")
 }
 
 android {
@@ -112,4 +113,8 @@ dependencies {
     // OkHttp
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
     implementation("com.google.code.gson:gson:2.10.1")
+
+    // Crashlytics
+    implementation("com.google.firebase:firebase-crashlytics-ktx:19.0.3")
+    implementation("com.google.firebase:firebase-analytics-ktx:22.1.2")
 }

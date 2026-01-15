@@ -151,6 +151,13 @@ fun AccountScreen(
                     )
                 }
             }
+            // In your AccountScreen, add a test button
+            Button(onClick = {
+                // Force a crash for testing
+                throw RuntimeException("Test Crash for Crashlytics")
+            }) {
+                Text("Test Crash")
+            }
 
             Spacer(Modifier.height(18.dp))
 
