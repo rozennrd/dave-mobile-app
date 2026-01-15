@@ -31,6 +31,7 @@ import com.example.dave.models.api.PlantViewModel
 import com.example.dave.ui.components.DaveNavItem
 import com.example.dave.ui.components.NavBar
 import com.example.dave.ui.components.PlantList
+import com.example.dave.ui.theme.Background
 import com.example.dave.ui.theme.GreenPrimary
 import com.example.dave.ui.theme.SulphurPoint
 import kotlinx.coroutines.delay
@@ -94,7 +95,7 @@ fun PlantListScreen(modifier: Modifier = Modifier,
                     }
                 },
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxSize().background(Background)
                     .padding(bottom = 120.dp)
             ) {
                 // Plant list
@@ -102,7 +103,9 @@ fun PlantListScreen(modifier: Modifier = Modifier,
                     state = plantState,
                     modifier = Modifier
                         .fillMaxSize()
+                        .background(Background)
                         .padding(bottom = 120.dp), // Leave space for navbar
+
                     onPlantClick = { plant ->
                         navController.navigate("plantDetail/${plant.id}")
                     }
