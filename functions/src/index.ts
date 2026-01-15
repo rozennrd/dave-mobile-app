@@ -251,3 +251,141 @@ export const deletePlant = onCall(
     }
   }
 );
+/* =========================
+   5. Initialize Sample Plants
+========================= */
+
+export const initializeSamplePlants = onCall(
+  { region: REGION },
+  async (request) => {
+    const userId = assertAuthenticated(request);
+
+    try {
+      // Check if user already has plants
+      const existingPlants = await db
+        .collection("users")
+        .doc(userId)
+        .collection("plants")
+        .limit(1)
+        .get();
+
+      if (!existingPlants.empty) {
+        return {
+          message: "User already has plants. Initialization skipped.",
+          plantsAdded: 0
+        };
+      }
+
+      // Sample plants to add
+      const samplePlants: Omit<Plant, "id">[] = [
+        {
+          common_name: "Snake Plant",
+          scientific_name: ["Dracaena trifasciata", "Sansevieria trifasciata"],
+          family: "Asparagaceae",
+          type: "Succulent",
+          care_level: "Low",
+          sunlight: ["Low", "Part shade"],
+          watering: "Minimum",
+          indoor: true,
+          poisonous_to_humans: false,
+          poisonous_to_pets: true,
+          drought_tolerant: true,
+          soil: ["Well-drained", "Sandy"],
+          notes: "Very hardy, perfect for beginners. Can survive in low light.",
+          ownerId: userId,
+        },
+        {
+          common_name: "Pothos",
+          scientific_name: ["Epipremnum aureum"],
+          family: "Araceae",
+          type: "Vine",
+          care_level: "Low",
+          sunlight: ["Low", "Part shade", "Part sun"],
+          watering: "Average",
+          indoor: true,
+          poisonous_to_humans: true,
+          poisonous_to_pets: true,
+          drought_tolerant: false,
+          soil: ["Well-drained", "Loamy"],
+          notes: "Fast-growing trailing plant. Easy to propagate from cuttings.",
+          ownerId: userId,
+        },
+        {
+          common_name: "Monstera",
+          scientific_name: ["Monstera deliciosa"],
+          family: "Araceae",
+          type: "Vine",
+          care_level: "Moderate",
+          sunlight: ["Part shade", "Part sun"],
+          watering: "Average",
+          indoor: true,
+          poisonous_to_humans: true,
+          poisonous_to_pets: true,
+          drought_tolerant: false,
+          soil: ["Well-drained", "Loamy", "Peat moss"],
+          notes: "Popular houseplant with iconic split leaves. Needs support as it grows.",
+          ownerId: userId,
+        },
+        {
+          common_name: "Spider Plant",
+          scientific_name: ["Chlorophytum comosum"],
+          family: "Asparagaceae",
+          type: "Perennial",
+          care_level: "Low",
+          sunlight: ["Part shade", "Part sun"],
+          watering: "Average",
+          indoor: true,
+          poisonous_to_humans: false,
+          poisonous_to_pets: false,
+          drought_tolerant: false,
+          soil: ["Well-drained", "Loamy"],
+          notes: "Produces baby plants (spiderettes) that can be propagated. Safe for pets!",
+          ownerId: userId,
+        },
+        {
+          common_name: "Peace Lily",
+          scientific_name: ["Spathiphyllum wallisii"],
+          family: "Araceae",
+          type: "Perennial",
+          care_level: "Low",
+          sunlight: ["Low", "Part shade"],
+          watering: "Average",
+          indoor: true,
+          poisonous_to_humans: true,
+          poisonous_to_pets: true,
+          drought_tolerant: false,
+          soil: ["Well-drained", "Loamy", "Peat moss"],
+          notes: "Beautiful white flowers. Good air purifier. Wilts when it needs water.",
+          ownerId: userId,
+        },
+      ];
+
+      // Add all sample plants
+      const batch = db.batch();
+      const plantRefs = samplePlants.map((plant) =>
+        db.collection("users").doc(userId).collection("plants").doc()
+      );
+
+      plantRefs.forEach((ref, index) => {
+        batch.set(ref, samplePlants[index]);
+      });
+
+      await batch.commit();
+
+      return {
+        message: "Sample plants initialized successfully!",
+        plantsAdded: samplePlants.length,
+      };
+    } catch (error: unknown) {
+      console.error("Error initializing sample plants:", error);
+
+      const message =
+        error instanceof Error ? error.message : "Unknown error";
+
+      throw new HttpsError(
+        "internal",
+        `Error initializing sample plants: ${message}`
+      );
+    }
+  }
+);

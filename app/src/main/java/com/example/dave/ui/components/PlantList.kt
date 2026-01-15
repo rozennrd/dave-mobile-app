@@ -91,6 +91,7 @@ private fun GridState(
         items(plants) { plant ->
             PlantCard(
                 plant = plant,
+                onClick = onPlantClick,
                 modifier = Modifier.fillMaxWidth() // Takes 50% minus half gutter
             )
         }
