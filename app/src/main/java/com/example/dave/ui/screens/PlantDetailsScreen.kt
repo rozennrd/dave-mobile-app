@@ -79,8 +79,6 @@ fun PlantDetailScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showSaveDialog by remember { mutableStateOf(false) }
     val fallbackImagePainter = painterResource(id = R.drawable.heart_plant)
-//    var editedSurname by remember { mutableStateOf(plant.surname ?: "") }
-//    var editedNotes by remember { mutableStateOf(plant.notes ?: "") }
     var showDropdown by remember { mutableStateOf(false) }
 
     // On utilise remember(currentPlant) pour que les champs se vident/se remplissent quand on change de plante
@@ -181,7 +179,8 @@ fun PlantDetailScreen(
 
             // Image de la plante
             FailsafeAsyncImage(
-                plant.imageUrl,
+                url = currentPlant.imageUrl,
+                fallbackImage = fallbackImagePainter,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(260.dp)
@@ -191,8 +190,7 @@ fun PlantDetailScreen(
                             bottomEnd = 32.dp
                         )
                     ),
-                contentDescription = plant.commonName,
-                fallbackImage = fallbackImagePainter
+                contentDescription = currentPlant.commonName
             )
 
             // Contenu principal
