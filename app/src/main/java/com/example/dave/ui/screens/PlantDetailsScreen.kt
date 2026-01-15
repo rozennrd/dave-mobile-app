@@ -1,7 +1,6 @@
 package com.example.dave.ui.screens
 
 import ApiService
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,18 +15,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.SubcomposeAsyncImage
 import com.example.dave.R
 import com.example.dave.models.api.PlantViewModel
-import com.example.dave.ui.theme.components.LevelMaintenance
-import com.example.dave.ui.theme.components.ConfirmActionDialog
+import com.example.dave.ui.components.LevelMaintenance
+import com.example.dave.ui.components.ConfirmActionDialog
 import com.example.dave.ui.theme.*
 import com.example.dave.ui.components.NavBar
 import com.example.dave.ui.components.DaveNavItem

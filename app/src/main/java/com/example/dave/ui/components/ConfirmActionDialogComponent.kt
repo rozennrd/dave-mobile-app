@@ -1,4 +1,4 @@
-package com.example.dave.ui.theme.components
+package com.example.dave.ui.components
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button

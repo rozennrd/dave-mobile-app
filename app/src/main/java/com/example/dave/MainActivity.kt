@@ -23,9 +23,9 @@ import androidx.navigation.navArgument
 import com.example.dave.models.LoginModel
 import com.example.dave.models.api.PlantViewModel
 import com.example.dave.models.api.PlantViewModelFactory
-import com.example.dave.ui.theme.screens.AccountScreen
-import com.example.dave.ui.theme.screens.LoginScreen
-import com.example.dave.ui.theme.screens.PlantListScreen
+import com.example.dave.ui.screens.AccountScreen
+import com.example.dave.ui.screens.LoginScreen
+import com.example.dave.ui.screens.PlantListScreen
 import com.example.dave.ui.components.PlantListState
 import com.example.dave.ui.screens.PlantDetail
 import com.example.dave.ui.screens.PlantDetailScreen

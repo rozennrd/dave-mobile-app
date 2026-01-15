@@ -1,7 +1,6 @@
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import com.example.dave.BuildConfig
 import com.example.dave.ui.screens.PlantDetail
 import okhttp3.*
