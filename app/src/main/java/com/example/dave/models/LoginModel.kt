@@ -44,34 +44,34 @@ class LoginModel : ViewModel() {
         }
     }
 
-    // Update email
-    suspend fun updateEmail(newEmail: String): Result<Unit> {
+    suspend fun signUpWithEmail(email: String, password: String, name: String? = null): Result<FirebaseUser> {
         return try {
             _authState.value = AuthState.Loading
 
-            val user = auth.currentUser
-                ?: return Result.failure(IllegalStateException("No user logged in"))
+            val authResult = auth.createUserWithEmailAndPassword(email.trim(), password.trim()).await()
 
-            val trimmed = newEmail.trim()
+            // Optionnel : définir le displayName
+            name?.trim()?.takeIf { it.isNotEmpty() }?.let { displayName ->
+                val updates = UserProfileChangeRequest.Builder()
+                    .setDisplayName(displayName)
+                    .build()
+                authResult.user?.updateProfile(updates)?.await()
+            }
 
-            user.updateEmail(trimmed).await()
-
-            // ✅ IMPORTANT : reload pour récupérer l’état serveur
-            user.reload().await()
-
+            authResult.user?.reload()?.await()
             _currentUser.value = auth.currentUser
             _authState.value = AuthState.Success(auth.currentUser)
 
-            Result.success(Unit)
+            Result.success(authResult.user!!)
         } catch (e: FirebaseAuthException) {
-            // ✅ On remonte le code + message Firebase (super utile)
             _authState.value = AuthState.Error("${e.errorCode}: ${e.message}")
             Result.failure(e)
         } catch (e: Exception) {
-            _authState.value = AuthState.Error(e.message ?: "Failed to update email")
+            _authState.value = AuthState.Error(e.message ?: "Sign up failed")
             Result.failure(e)
         }
     }
+
 
     suspend fun updatePassword(newPassword: String): Result<Unit> {
         return try {

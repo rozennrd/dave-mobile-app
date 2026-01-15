@@ -1,6 +1,7 @@
 package com.example.dave.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,8 +35,11 @@ fun LoginScreen(
     navController: NavController,
     loginModel: LoginModel = viewModel(),
 ) {
+    var isSignUp by remember { mutableStateOf(false) }
+
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
 
     val authState by loginModel.authState.collectAsState()
     val currentUser by loginModel.currentUser.collectAsState()
@@ -79,11 +83,12 @@ fun LoginScreen(
         Spacer(Modifier.height(22.dp))
 
         Text(
-            text = "Welcome on DAVE",
+            text = if (isSignUp) "Create your account" else "Welcome on DAVE",
             fontSize = 28.sp,
             fontWeight = FontWeight.Black,
             color = Dark
         )
+
 
         Spacer(Modifier.height(6.dp))
 
@@ -96,6 +101,19 @@ fun LoginScreen(
         )
 
         Spacer(Modifier.height(60.dp))
+
+        if (isSignUp) {
+            RoundedTextField(
+                value = name,
+                onValueChange = { name = it },
+                placeholder = "Name",
+                leadingIcon = painterResource(R.drawable.ic_user),
+                fieldColor = BrownPrimary,
+                hintColor = Color.White,
+                textColor = Color.White
+            )
+            Spacer(Modifier.height(14.dp))
+        }
 
         RoundedTextField(
             value = username,
@@ -135,25 +153,48 @@ fun LoginScreen(
 
         val scope = rememberCoroutineScope()
 
+
         Button(
             onClick = {
                 scope.launch {
-                    loginModel.signInWithEmail(username.trim(), password)
+                    if (isSignUp) {
+                        loginModel.signUpWithEmail(
+                            email = username.trim(),
+                            password = password,
+                            name = name.trim()
+                        )
+                    } else {
+                        loginModel.signInWithEmail(username.trim(), password)
+                    }
                 }
             },
             enabled = !isLoading,
             colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
             shape = RoundedCornerShape(50),
             modifier = Modifier
-                .width(160.dp)
+                .width(180.dp)
                 .height(48.dp)
         ) {
             Text(
-                text = if (isLoading) "Loading..." else "Sign in",
+                text = if (isLoading) "Loading..." else if (isSignUp) "Create account" else "Sign in",
                 fontWeight = FontWeight.SemiBold,
                 color = Color.White
             )
         }
+        Spacer(Modifier.height(12.dp))
+
+        Text(
+            text = if (isSignUp) "Back to Sign in" else "Sign up",
+            color = BlueSoft,
+            fontFamily = Jost,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clickable {
+                isSignUp = !isSignUp
+                password = ""
+                if (!isSignUp) name = ""
+            }
+        )
+
     }
 }
 
