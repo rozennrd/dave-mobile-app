@@ -1,15 +1,36 @@
+import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import com.example.dave.BuildConfig
 import com.example.dave.ui.screens.PlantDetail
 import okhttp3.*
 import org.json.JSONObject
+import java.io.File
 import java.io.IOException
 
-class ApiService {
-    private val client = OkHttpClient()
-    private val apiKey = "sk-vp1f6960ae43c7a0a14258"
+class ApiService(context: Context) {
+    private val client:OkHttpClient;
+    private val apiKey = BuildConfig.PERENUAL_API_KEY
 
+    init {
+        // Create cache directory
+        val cacheSize = 10 * 1024 * 1024 // 10 MB
+        val cacheDirectory = File(context.cacheDir, "http_cache")
+        val cache = Cache(cacheDirectory, cacheSize.toLong())
+
+        // Build OkHttp client with cache
+        client = OkHttpClient.Builder()
+            .cache(cache)
+            .addInterceptor { chain ->
+                val request = chain.request()
+                    .newBuilder()
+                    .header("Cache-Control", "public, max-age=86400") // Cache for 24 hours
+                    .build()
+                chain.proceed(request)
+            }
+            .build()
+    }
     fun fetchPlantList(onResult: (List<Pair<Int, String>>) -> Unit) {
         val url = "https://perenual.com/api/v2/species-list?key=$apiKey"
         val request = Request.Builder().url(url).build()
@@ -39,52 +60,6 @@ class ApiService {
             }
         })
     }
-
-    /*fun fetchPlantDetails(plantId: Int, onResult: (PlantDetail) -> Unit) {
-        val url = "https://perenual.com/api/v2/species/details/$plantId?key=$apiKey"
-        val request = Request.Builder().url(url).build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) { e.printStackTrace() }
-
-            override fun onResponse(call: Call, response: Response) {
-                val body = response.body?.string()
-                if (response.isSuccessful && body != null) {
-                    val json = JSONObject(body)
-
-                    // 1. Extraction du sol (Directement à la racine selon ton JSON)
-                    val soilArray = json.optJSONArray("soil")
-                    val soilList = soilArray?.let { array ->
-                        List(array.length()) { i -> array.getString(i) }
-                    } ?: listOf("Not specified")
-
-                    // On crée l'objet PlantDetail avec les infos du JSON
-                    val detailedPlant = PlantDetail(
-                        id = json.getInt("id"),
-                        commonName = json.getString("common_name"),
-                        scientificName = listOf(json.getJSONArray("scientific_name").getString(0)),
-                        family = json.optString("family", "Unknown"),
-                        type = json.optString("type", "Unknown"),
-                        imageUrl = json.optJSONObject("default_image")?.optString("original_url"),
-                        careLevel = json.optString("care_level"),
-                        sunlight = listOf("Full sun"),
-                        watering = json.optString("watering"),
-                        indoor = json.optBoolean("indoor"),
-                        poisonousToHumans = json.optInt("poisonous_to_humans") > 0,
-                        poisonousToPets = json.optInt("poisonous_to_pets") > 0,
-                        droughtTolerant = json.optBoolean("drought_tolerant"),
-                        soil = soilList,
-                        surname = "", // Vide au début
-                        notes = ""    // Vide au début
-                    )
-
-                    Handler(Looper.getMainLooper()).post {
-                        onResult(detailedPlant)
-                    }
-                }
-            }
-        })
-    }*/
 
     fun fetchPlantDetails(plantId: Int, onResult: (PlantDetail) -> Unit) {
         val url = "https://perenual.com/api/v2/species/details/$plantId?key=$apiKey"
