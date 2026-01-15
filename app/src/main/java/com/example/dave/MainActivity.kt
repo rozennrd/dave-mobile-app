@@ -66,10 +66,6 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable("myPlants") {
-                        // Initialize sample plants ONCE at app level, not on every navigation
-                        LaunchedEffect(Unit) {
-                            plantViewModel.initializeSamplePlants()
-                        }
                         PlantListScreen(
                             navController = navController,
                             onHomeClick = { /* already on home */ },
