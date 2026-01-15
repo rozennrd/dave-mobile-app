@@ -7,11 +7,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,7 +33,9 @@ import com.example.dave.ui.components.NavBar
 import com.example.dave.ui.components.PlantList
 import com.example.dave.ui.theme.GreenPrimary
 import com.example.dave.ui.theme.SulphurPoint
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlantListScreen(modifier: Modifier = Modifier,
                     onHomeClick: () -> Unit = {},
@@ -39,6 +47,8 @@ fun PlantListScreen(modifier: Modifier = Modifier,
                     ){
     // Use loaded plants
     val plantState by plantViewModel.plantState.collectAsState()
+    var isRefreshing by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {  // ← Only run once
         loginModel.currentUser.collect { user ->
@@ -71,16 +81,32 @@ fun PlantListScreen(modifier: Modifier = Modifier,
                 )
             }
 
-            // Plant list
-            PlantList(
-                state = plantState,
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    isRefreshing = true
+                    plantViewModel.refreshPlants()
+                    // Set a timeout to stop refreshing indicator
+                    coroutineScope.launch {
+                        kotlinx.coroutines.delay(1500)
+                        isRefreshing = false
+                    }
+                },
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = 120.dp), // Leave space for navbar
-                onPlantClick = { plant ->
-                    navController.navigate("plantDetail/${plant.id}")
-                }
-            )
+                    .padding(bottom = 120.dp)
+            ) {
+                // Plant list
+                PlantList(
+                    state = plantState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 120.dp), // Leave space for navbar
+                    onPlantClick = { plant ->
+                        navController.navigate("plantDetail/${plant.id}")
+                    }
+                )
+            }
         }
 
         // Navigation bar

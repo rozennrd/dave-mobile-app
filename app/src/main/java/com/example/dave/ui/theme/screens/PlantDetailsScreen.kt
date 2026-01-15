@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import com.example.dave.R
+import com.example.dave.models.api.PlantViewModel
 import com.example.dave.ui.theme.components.LevelMaintenance
 import com.example.dave.ui.theme.components.ConfirmActionDialog
 import com.example.dave.ui.theme.*
@@ -56,6 +57,7 @@ fun PlantDetailScreen(
     onDeleteClick: () -> Unit = {},
     onModifyClick: (surname: String, notes: String) -> Unit = { _, _ ->},
     onHomeClick: () -> Unit = {},
+    plantViewModel: PlantViewModel? = null,
     onAddClick: () -> Unit = {},
     onAccountClick: () -> Unit = {},
     onAddPlantClick: () -> Unit = {},
@@ -201,7 +203,7 @@ fun PlantDetailScreen(
                     .padding(horizontal = 20.dp, vertical = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                if (isEditMode) {
+                if (isEditMode or isAddMode) {
                     OutlinedTextField(
                         value = editedSurname,
                         onValueChange = { editedSurname = it },
@@ -330,7 +332,7 @@ fun PlantDetailScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Section Notes
-                if (isEditMode) {
+                if (isEditMode or isAddMode) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -398,13 +400,32 @@ fun PlantDetailScreen(
                     val canAddPlant = selectedPlantName != "Plant name"
                     Button(
                         onClick = {
-                            isAddMode = false
-                            onAddPlantClick()
+                            plantViewModel?.let { vm ->
+                                // Call addPlant with all the current plant details
+                                vm.addPlant(
+                                    commonName = currentPlant.commonName,
+                                    scientificName = currentPlant.scientificName,
+                                    plantName = editedSurname.takeIf { it.isNotBlank() },  // Use edited surname as plant_name
+                                    family = currentPlant.family,
+                                    type = currentPlant.type,
+                                    imageUrl = currentPlant.imageUrl,
+                                    careLevel = currentPlant.careLevel,
+                                    sunlight = currentPlant.sunlight,
+                                    watering = currentPlant.watering,
+                                    indoor = currentPlant.indoor,
+                                    poisonousToHumans = currentPlant.poisonousToHumans,
+                                    poisonousToPets = currentPlant.poisonousToPets,
+                                    droughtTolerant = currentPlant.droughtTolerant,
+                                    soil = currentPlant.soil,
+                                    notes = editedNotes.takeIf { it.isNotBlank() }  // Use edited notes
+                                )
+                                // Call the callback to navigate back
+                                onAddPlantClick()
+                            }
                         },
-                        enabled = canAddPlant, // Le bouton s'active si canAddPlant est vrai
+                        enabled = canAddPlant,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = GreenPrimary,
-                            // Précision de la couleur du bouton quand il est désactivé
                             disabledContainerColor = Color.Gray.copy(alpha = 0.5f)
                         ),
                         shape = RoundedCornerShape(50),

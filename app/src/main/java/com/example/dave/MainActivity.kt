@@ -106,7 +106,14 @@ class MainActivity : ComponentActivity() {
                             isAddMode = true,
                             onHomeClick = { navController.navigate("myPlants") },
                             onAddClick = { /* already on addPlant */ },
-                            onAccountClick = { navController.navigate("account") }
+                            onAccountClick = { navController.navigate("account") },
+                            plantViewModel = plantViewModel,  // Pass the plantViewModel
+                            onAddPlantClick = {
+                                // Navigate back to plant list after adding
+                                navController.navigate("myPlants") {
+                                    popUpTo("myPlants") { inclusive = true }
+                                }
+                            }
                         )
                     }
 
@@ -164,7 +171,8 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onAccountClick = {
                                     navController.navigate("account")
-                                }
+                                },
+                                plantViewModel = plantViewModel,
                             )
                         } ?: run {
                             // Plant not found, show loading or go back
