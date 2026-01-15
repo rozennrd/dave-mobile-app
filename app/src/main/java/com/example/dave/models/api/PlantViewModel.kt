@@ -224,33 +224,6 @@ class PlantViewModel(private val loginModel: LoginModel) : ViewModel() {
             }
     }
 
-    fun initializeSamplePlants() {
-        viewModelScope.launch {
-            try {
-                val functions = FirebaseFunctions.Companion.getInstance("europe-southwest1")
-                val initFunction = functions.getHttpsCallable("initializeSamplePlants")
-
-                initFunction.call()
-                    .addOnSuccessListener { result ->
-                        val data = result.data as? Map<*, *>
-                        val message = data?.get("message") as? String
-                        val plantsAdded = (data?.get("plantsAdded") as? Number)?.toInt() ?: 0
-
-                        Log.d("PlantViewModel", "Init result: $message (Added: $plantsAdded)")
-
-                        if (plantsAdded > 0) {
-                            fetchPlants()
-                        }
-                    }
-                    .addOnFailureListener { exception ->
-                        Log.e("PlantViewModel", "Failed to initialize plants", exception)
-                    }
-            } catch (e: Exception) {
-                Log.e("PlantViewModel", "Error initializing sample plants", e)
-            }
-        }
-    }
-
     fun refreshPlants() {
         fetchPlants()
     }
