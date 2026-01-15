@@ -1,7 +1,6 @@
 package com.example.dave.ui.screens
 
 import ApiService
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,13 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.SubcomposeAsyncImage
 import com.example.dave.R
 import com.example.dave.ui.theme.components.LevelMaintenance
 import com.example.dave.ui.theme.components.ConfirmActionDialog
@@ -64,7 +61,7 @@ fun PlantDetailScreen(
 ) {
     val apiService = remember { ApiService() }
 
-    // 1. On crée une liste d'état qui contiendra nos paires (ID, Nom)
+    // 1. On crée une liste d'état qui contiendra nos plantes (ID, Nom)
     var apiPlantOptions by remember { mutableStateOf(listOf<Pair<Int, String>>()) }
 
     // 2. Appel API au chargement
@@ -105,65 +102,44 @@ fun PlantDetailScreen(
                 contentAlignment = Alignment.Center
             ) {
                 if (isAddMode) {
-                    // Dropdown pour sélectionner une plante
-                    Row(
+                    // Box cliquable pour ouvrir/fermer le dropdown
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp)
-                            .clickable { showDropdown = !showDropdown },
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                            .fillMaxSize()
+                            .clickable { showDropdown = !showDropdown }
+                            .padding(horizontal = 20.dp),
+                        contentAlignment = Alignment.Center
                     ) {
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.search_24dp),
+                                    contentDescription = "Search",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                                Text(
+                                    text = selectedPlantName,
+                                    color = Color.White,
+                                    fontSize = 32.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = SulphurPoint
+                                )
+                            }
                             Icon(
-                                painter = painterResource(R.drawable.search_24dp),
-                                contentDescription = "Search",
+                                painter = painterResource(
+                                    if (showDropdown) R.drawable.arrow_drop_up_24dp else R.drawable.arrow_drop_down_24dp
+                                ),
+                                contentDescription = "Toggle dropdown",
                                 tint = Color.White,
-                                modifier = Modifier.size(28.dp)
-                            )
-                            Text(
-                                text = selectedPlantName,
-                                color = Color.White,
-                                fontSize = 32.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = SulphurPoint
-                            )
-                        }
-                        Icon(
-                            painter = painterResource(
-                                if (showDropdown) R.drawable.arrow_drop_up_24dp else R.drawable.arrow_drop_down_24dp
-                            ),
-                            contentDescription = "Toggle dropdown",
-                            tint = Color.White,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-
-                    // Liste déroulante
-                    DropdownMenu(
-                        expanded = showDropdown,
-                        onDismissRequest = { showDropdown = false },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.White)
-                    ) {
-                        // On boucle sur la liste venant de l'API
-                        apiPlantOptions.forEach { (id, name) ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(text = name, fontFamily = SulphurPoint, fontSize = 18.sp)
-                                },
-                                onClick = {
-                                    showDropdown = false
-
-                                    // APPEL API pour les détails
-                                    apiService.fetchPlantDetails(id) { detailedPlant ->
-                                        currentPlant = detailedPlant
-                                    }
-                                }
+                                modifier = Modifier.size(32.dp)
                             )
                         }
                     }
@@ -178,9 +154,41 @@ fun PlantDetailScreen(
                 }
             }
 
+            // Liste déroulante
+            if (isAddMode) {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    DropdownMenu(
+                        expanded = showDropdown,
+                        onDismissRequest = { showDropdown = false },
+                        modifier = Modifier
+                            .fillMaxWidth(0.9f)
+                            .background(Color.White)
+                    ) {
+                        apiPlantOptions.forEach { (id, name) ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(text = name, fontFamily = SulphurPoint, fontSize = 18.sp)
+                                },
+                                onClick = {
+                                    showDropdown = false
+                                    apiService.fetchPlantDetails(id) { detailedPlant ->
+                                        currentPlant = detailedPlant
+                                        selectedPlantName = detailedPlant.commonName
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
             // Image de la plante
             FailsafeAsyncImage(
-                plant.imageUrl,
+                url = currentPlant.imageUrl,
+                fallbackImage = fallbackImagePainter,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(260.dp)
@@ -190,8 +198,7 @@ fun PlantDetailScreen(
                             bottomEnd = 32.dp
                         )
                     ),
-                contentDescription = plant.commonName,
-                fallbackImage = fallbackImagePainter
+                contentDescription = currentPlant.commonName
             )
 
             // Contenu principal
@@ -365,7 +372,6 @@ fun PlantDetailScreen(
                         }
                     }
                 } else {
-
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -381,7 +387,7 @@ fun PlantDetailScreen(
                                 fontFamily = SulphurPoint
                             )
                             Text(
-                                text = "",
+                                text = currentPlant.notes ?: "",
                                 color = Color.White,
                                 fontSize = 16.sp,
                                 fontFamily = SulphurPoint,
@@ -580,24 +586,6 @@ private fun EditableField(
                 fontFamily = SulphurPoint,
                 fontSize = 16.sp
             )
-        )
-    }
-}
-
-@Composable
-fun AsyncImage(
-    model: String?,
-    contentDescription: String,
-    modifier: Modifier,
-    contentScale: ContentScale
-) {
-    Box(
-        modifier = modifier.background(Color.LightGray),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Image",
-            color = Color.DarkGray
         )
     }
 }

@@ -8,7 +8,7 @@ import java.io.IOException
 
 class ApiService {
     private val client = OkHttpClient()
-    private val apiKey = "sk-vp1f6960ae43c7a0a14258"
+    private val apiKey = "sk-ibU96968b982b170c14345"
 
     fun fetchPlantList(onResult: (List<Pair<Int, String>>) -> Unit) {
         val url = "https://perenual.com/api/v2/species-list?key=$apiKey"
@@ -39,52 +39,6 @@ class ApiService {
             }
         })
     }
-
-    /*fun fetchPlantDetails(plantId: Int, onResult: (PlantDetail) -> Unit) {
-        val url = "https://perenual.com/api/v2/species/details/$plantId?key=$apiKey"
-        val request = Request.Builder().url(url).build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) { e.printStackTrace() }
-
-            override fun onResponse(call: Call, response: Response) {
-                val body = response.body?.string()
-                if (response.isSuccessful && body != null) {
-                    val json = JSONObject(body)
-
-                    // 1. Extraction du sol (Directement à la racine selon ton JSON)
-                    val soilArray = json.optJSONArray("soil")
-                    val soilList = soilArray?.let { array ->
-                        List(array.length()) { i -> array.getString(i) }
-                    } ?: listOf("Not specified")
-
-                    // On crée l'objet PlantDetail avec les infos du JSON
-                    val detailedPlant = PlantDetail(
-                        id = json.getInt("id"),
-                        commonName = json.getString("common_name"),
-                        scientificName = listOf(json.getJSONArray("scientific_name").getString(0)),
-                        family = json.optString("family", "Unknown"),
-                        type = json.optString("type", "Unknown"),
-                        imageUrl = json.optJSONObject("default_image")?.optString("original_url"),
-                        careLevel = json.optString("care_level"),
-                        sunlight = listOf("Full sun"),
-                        watering = json.optString("watering"),
-                        indoor = json.optBoolean("indoor"),
-                        poisonousToHumans = json.optInt("poisonous_to_humans") > 0,
-                        poisonousToPets = json.optInt("poisonous_to_pets") > 0,
-                        droughtTolerant = json.optBoolean("drought_tolerant"),
-                        soil = soilList,
-                        surname = "", // Vide au début
-                        notes = ""    // Vide au début
-                    )
-
-                    Handler(Looper.getMainLooper()).post {
-                        onResult(detailedPlant)
-                    }
-                }
-            }
-        })
-    }*/
 
     fun fetchPlantDetails(plantId: Int, onResult: (PlantDetail) -> Unit) {
         val url = "https://perenual.com/api/v2/species/details/$plantId?key=$apiKey"
