@@ -1,5 +1,7 @@
 package com.example.dave.ui.screens
 
+import ApiService
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.SubcomposeAsyncImage
 import com.example.dave.R
 import com.example.dave.ui.theme.components.LevelMaintenance
 import com.example.dave.ui.theme.components.ConfirmActionDialog
@@ -57,26 +60,29 @@ fun PlantDetailScreen(
     isAddMode: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    val apiService = remember { ApiService() }
+
+    // 1. On crée une liste d'état qui contiendra nos paires (ID, Nom)
+    var apiPlantOptions by remember { mutableStateOf(listOf<Pair<Int, String>>()) }
+
+    // 2. Appel API au chargement
+    LaunchedEffect(Unit) {
+        apiService.fetchPlantList { list ->
+            apiPlantOptions = list
+        }
+    }
     var isAddMode by remember { mutableStateOf(isAddMode) }
     var isEditMode by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showSaveDialog by remember { mutableStateOf(false) }
     var showDropdown by remember { mutableStateOf(false) }
 
-    var editedSurname by remember { mutableStateOf(plant.surname ?: "") }
-    var editedNotes by remember { mutableStateOf(plant.notes ?: "") }
+    // On utilise remember(currentPlant) pour que les champs se vident/se remplissent quand on change de plante
+    var currentPlant by remember { mutableStateOf(plant) }
+    var editedSurname by remember(currentPlant) { mutableStateOf(currentPlant.surname ?: "") }
+    var editedNotes by remember(currentPlant) { mutableStateOf(currentPlant.notes ?: "") }
 
-    var selectedPlantName by remember { mutableStateOf(plant.commonName) }
-
-    // Liste de plantes pour la dropdown => A ENLEVER PLUS TARD
-    val plantNames = listOf(
-        "European Silver Fir",
-        "Monstera Deliciosa",
-        "Aloe Vera",
-        "Snake Plant",
-        "Pothos",
-        "Rubber Plant"
-    )
+    var selectedPlantName by remember(currentPlant) { mutableStateOf(currentPlant.commonName) }
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(
@@ -139,18 +145,19 @@ fun PlantDetailScreen(
                             .fillMaxWidth()
                             .background(Color.White)
                     ) {
-                        plantNames.forEach { plantName ->
+                        // On boucle sur la liste venant de l'API
+                        apiPlantOptions.forEach { (id, name) ->
                             DropdownMenuItem(
                                 text = {
-                                    Text(
-                                        text = plantName,
-                                        fontFamily = SulphurPoint,
-                                        fontSize = 18.sp
-                                    )
+                                    Text(text = name, fontFamily = SulphurPoint, fontSize = 18.sp)
                                 },
                                 onClick = {
-                                    selectedPlantName = plantName
                                     showDropdown = false
+
+                                    // APPEL API pour les détails
+                                    apiService.fetchPlantDetails(id) { detailedPlant ->
+                                        currentPlant = detailedPlant
+                                    }
                                 }
                             )
                         }
@@ -168,8 +175,8 @@ fun PlantDetailScreen(
 
             // Image de la plante
             AsyncImage(
-                model = plant.imageUrl,
-                contentDescription = plant.commonName,
+                model = currentPlant.imageUrl,
+                contentDescription = currentPlant.commonName,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(260.dp)
@@ -219,10 +226,10 @@ fun PlantDetailScreen(
 
                 PlantInfoRow(
                     label = "Scientific name",
-                    value = plant.scientificName.firstOrNull() ?: "Unknown"
+                    value = currentPlant.scientificName.firstOrNull() ?: "Unknown"
                 )
-                PlantInfoRow(label = "Family", value = plant.family ?: "Unknown")
-                PlantInfoRow(label = "Type", value = plant.type ?: "Unknown")
+                PlantInfoRow(label = "Family", value = currentPlant.family ?: "Unknown")
+                PlantInfoRow(label = "Type", value = currentPlant.type ?: "Unknown")
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -230,7 +237,7 @@ fun PlantDetailScreen(
                 SectionTitle(title = "Maintenance")
                 PlantInfoRow(
                     label = "Soil",
-                    value = plant.soil?.joinToString(", ") ?: "Unknown"
+                    value = currentPlant.soil?.joinToString(", ") ?: "Unknown"
                 )
 
                 Row(
@@ -244,28 +251,28 @@ fun PlantDetailScreen(
                         fontFamily = SulphurPoint
                     )
                     Text(
-                        text = if (plant.indoor == true) "Indoor" else "Outdoor",
+                        text = if (currentPlant.indoor == true) "Indoor" else "Outdoor",
                         fontSize = 16.sp,
                         fontFamily = SulphurPoint
                     )
                     Icon(
                         painter = painterResource(
-                            id = if (plant.indoor == true) {
+                            id = if (currentPlant.indoor == true) {
                                 R.drawable.house_24dp
                             } else {
                                 R.drawable.nature_24dp
                             }
                         ),
-                        contentDescription = if (plant.indoor == true) "Indoor plant" else "Outdoor plant",
+                        contentDescription = if (currentPlant.indoor == true) "Indoor plant" else "Outdoor plant",
                         tint = BlueSoft,
                         modifier = Modifier.size(20.dp)
                     )
                 }
 
                 LevelMaintenance(
-                    watering = plant.watering,
-                    sunlight = plant.sunlight,
-                    careLevel = plant.careLevel,
+                    watering = currentPlant.watering,
+                    sunlight = currentPlant.sunlight,
+                    careLevel = currentPlant.careLevel,
                     modifier = Modifier.padding(top = 12.dp)
                 )
 
@@ -286,12 +293,12 @@ fun PlantDetailScreen(
                         fontFamily = SulphurPoint
                     )
                     Text(
-                        text = if (plant.droughtTolerant == true) "high" else "low",
+                        text = if (currentPlant.droughtTolerant == true) "high" else "low",
                         color = Dark,
                         fontSize = 16.sp,
                         fontFamily = SulphurPoint
                     )
-                    repeat(if (plant.droughtTolerant == true) 3 else 1) {
+                    repeat(if (currentPlant.droughtTolerant == true) 3 else 1) {
                         Text(
                             text = "+",
                             color = GreenPrimary,
@@ -305,14 +312,14 @@ fun PlantDetailScreen(
                 PoisonousInfoRow(
                     iconRes = R.drawable.skull_24dp,
                     text = "I'm poisonous to humans",
-                    isPoisonous = plant.poisonousToHumans == true
+                    isPoisonous = currentPlant.poisonousToHumans == true
                 )
 
                 // Poisonous to pets
                 PoisonousInfoRow(
                     iconRes = R.drawable.pets_24dp,
                     text = "I'm poisonous to animals",
-                    isPoisonous = plant.poisonousToPets == true
+                    isPoisonous = currentPlant.poisonousToPets == true
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -352,7 +359,8 @@ fun PlantDetailScreen(
                             )
                         }
                     }
-                } else if (!plant.notes.isNullOrEmpty()) {
+                } else {
+
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -368,7 +376,7 @@ fun PlantDetailScreen(
                                 fontFamily = SulphurPoint
                             )
                             Text(
-                                text = plant.notes,
+                                text = "",
                                 color = Color.White,
                                 fontSize = 16.sp,
                                 fontFamily = SulphurPoint,
@@ -465,8 +473,9 @@ fun PlantDetailScreen(
                         Button(
                             onClick = {
                                 isEditMode = true
-                                editedSurname = plant.surname ?: ""
-                                editedNotes = plant.notes ?: ""
+                                // On se base sur currentPlant ici aussi
+                                editedSurname = currentPlant.surname ?: ""
+                                editedNotes = currentPlant.notes ?: ""
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = GreenPrimary
@@ -543,50 +552,30 @@ fun PlantDetailScreen(
 }
 
 @Composable
-private fun EditableField(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(
-            text = "$label :",
-            color = BrownPrimary,
-            fontSize = 16.sp,
-            fontFamily = SulphurPoint
-        )
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = GreenPrimary,
-                unfocusedBorderColor = BrownPrimary
-            ),
-            textStyle = LocalTextStyle.current.copy(
-                fontFamily = SulphurPoint,
-                fontSize = 16.sp
-            )
-        )
-    }
-}
-
-@Composable
 fun AsyncImage(
     model: String?,
     contentDescription: String,
     modifier: Modifier,
     contentScale: ContentScale
 ) {
-    Box(
-        modifier = modifier.background(Color.LightGray),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Image",
-            color = Color.DarkGray
-        )
-    }
+    SubcomposeAsyncImage(
+        model = model,
+        contentDescription = contentDescription,
+        modifier = modifier,
+        contentScale = contentScale,
+        // Pendant que l'image charge
+        loading = {
+            Box(Modifier.background(Color.LightGray), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(modifier = Modifier.size(32.dp), color = GreenPrimary)
+            }
+        },
+        // S'il y a une erreur d'URL ou reseau
+        error = {
+            Box(Modifier.background(Color.LightGray), contentAlignment = Alignment.Center) {
+                Icon(painter = painterResource(R.drawable.nature_24dp), contentDescription = null, tint = Color.Gray)
+            }
+        }
+    )
 }
 
 @Composable
