@@ -1,5 +1,6 @@
 package com.example.dave.ui.screens
 
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -25,12 +27,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import com.example.dave.R
 import com.example.dave.models.LoginModel
 import com.example.dave.ui.components.NavBar
 import com.example.dave.ui.components.DaveNavItem
 import com.example.dave.ui.components.RoundedTextField
+import com.example.dave.ui.components.ImagePicker
 import com.example.dave.ui.theme.*
 
 enum class EditableField { NAME, EMAIL, PASSWORD }
@@ -52,7 +56,11 @@ fun AccountScreen(
     var password by remember { mutableStateOf("••••••••") }
 
     val currentUser by loginModel.currentUser.collectAsState()
+    val context = LocalContext.current
 
+    // Avatar editing state
+    var showImagePicker by remember { mutableStateOf(false) }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     // Drafts (ce qu’on modifie pendant l’édition)
     var draftName by remember { mutableStateOf(name) }
@@ -115,17 +123,33 @@ fun AccountScreen(
                 modifier = Modifier
                     .size(190.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFD6D8C8)),
+                    .background(Color(0xFFD6D8C8))
+                    .clickable { showImagePicker = true },
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(R.drawable.photo_profil),
+                AsyncImage(
+                    model = currentUser?.photoUrl ?: R.drawable.photo_profil,
                     contentDescription = "Avatar",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .matchParentSize()
-                        .clip(CircleShape)
+                        .clip(CircleShape),
                 )
+
+                // Edit overlay
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(Color.Black.copy(alpha = 0.3f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_edit),
+                        contentDescription = "Edit Avatar",
+                        tint = Color.White,
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
             }
 
             Spacer(Modifier.height(18.dp))
@@ -224,6 +248,26 @@ fun AccountScreen(
             )
         }
 
+        // Image Picker Dialog
+        ImagePicker(
+            showDialog = showImagePicker,
+            onDismiss = { showImagePicker = false },
+            onImageSelected = { uri ->
+                selectedImageUri = uri
+                showImagePicker = false
+                // Upload the selected image
+                scope.launch {
+                    loginModel.updateAvatar(uri, context)
+                }
+            },
+            onRemoveAvatar = {
+                // Remove the current avatar
+                scope.launch {
+                    loginModel.deleteAvatar()
+                }
+            }
+        )
+
         NavBar(
             modifier = Modifier.align(Alignment.BottomCenter),
             onHomeClick = onHomeClick,
@@ -297,4 +341,3 @@ private fun FieldWithEdit(
         }
     }
 }
-
