@@ -203,7 +203,7 @@ fun PlantDetailScreen(
                     .padding(horizontal = 20.dp, vertical = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                if (isEditMode) {
+                if (isEditMode or isAddMode) {
                     OutlinedTextField(
                         value = editedSurname,
                         onValueChange = { editedSurname = it },
@@ -332,7 +332,7 @@ fun PlantDetailScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Section Notes
-                if (isEditMode) {
+                if (isEditMode or isAddMode) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
