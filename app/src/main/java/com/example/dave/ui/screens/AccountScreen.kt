@@ -164,14 +164,25 @@ fun AccountScreen(
 
             FieldWithEdit(
                 value = if (editingField == EditableField.NAME) draftName else name,
-                onValueChange = { },
+                onValueChange = { draftName = it },
                 placeholder = name.ifBlank { "Nom Prénom" },
                 leadingDrawable = R.drawable.ic_user,
-                isEditing = false,
-                showEditIcon = false,
-                forceReadOnly = true,
-                onEditClick = { },
-                onValidateClick = { }
+                isEditing = editingField == EditableField.NAME,
+                showEditIcon = true,
+                forceReadOnly = false,
+                onEditClick = {
+                    draftName = name
+                    editingField = EditableField.NAME
+                },
+                onValidateClick = {
+                    scope.launch {
+                        val res = loginModel.updateDisplayName(draftName)
+                        if (res.isSuccess) {
+                            editingField = null
+                            name = draftName
+                        }
+                    }
+                }
             )
 
             Spacer(Modifier.height(12.dp))
