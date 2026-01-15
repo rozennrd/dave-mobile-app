@@ -83,12 +83,16 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-functions")
     implementation("com.google.firebase:firebase-firestore") // Si vous l'utilisez directement
+    implementation("com.google.firebase:firebase-storage")
 
     // Google Sign-In
     implementation("com.google.android.gms:play-services-auth:21.3.0")
 
     // Image loading
     implementation("io.coil-kt:coil-compose:2.6.0")
+
+    // Permissions
+    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
 
     // Splash Screen
     implementation("androidx.core:core-splashscreen:1.0.1")
