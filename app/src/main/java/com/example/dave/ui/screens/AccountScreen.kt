@@ -257,7 +257,7 @@ private fun FieldWithEdit(
                 placeholder = placeholder,
                 leadingIcon = painterResource(leadingDrawable),
                 fieldColor = BrownPrimary,
-                hintColor = Color(0xFFEADAC0),
+                hintColor = Color.White,
                 textColor = Color.White,
                 iconSize = 22.dp,
                 readOnly = forceReadOnly || !isEditing,
