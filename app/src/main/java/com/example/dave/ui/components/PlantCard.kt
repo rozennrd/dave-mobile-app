@@ -30,10 +30,11 @@ import com.example.dave.ui.theme.DaveTheme
 import com.example.dave.ui.theme.components.LevelMaintenanceSmallDisplay
 
 @Composable
-fun PlantCard(plant: Plant, onClick: () -> Unit = {}, modifier: Modifier = Modifier) {
+fun PlantCard(plant: Plant, onClick: (Plant) -> Unit = {}, modifier: Modifier = Modifier) {
     val fallbackImagePainter = painterResource(id = R.drawable.heart_plant)
     // Your card implementation here
     Card(
+        onClick = { onClick(plant) },
         modifier = Modifier
             .widthIn(max = 180.dp) // Max width
             .fillMaxWidth(0.9f)     // But responsive
@@ -70,7 +71,8 @@ fun PlantCard(plant: Plant, onClick: () -> Unit = {}, modifier: Modifier = Modif
                 FailsafeAsyncImage(
                     url = plant.imageUrl,
                     fallbackImage = fallbackImagePainter,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    contentDescription = "Default plant",
                 )
             }
 

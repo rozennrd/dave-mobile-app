@@ -12,10 +12,36 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+// Mutation states for operations
+sealed class MutationState {
+    object Idle : MutationState()
+    object Loading : MutationState()
+    object Success : MutationState()
+    data class Error(val message: String) : MutationState()
+}
+
 class PlantViewModel(private val loginModel: LoginModel) : ViewModel() {
 
     private val _plantState = MutableStateFlow<PlantListState>(PlantListState.Loading)
     val plantState: StateFlow<PlantListState> = _plantState
+
+    // Mutation states for operations
+    private val _deleteState = MutableStateFlow<MutationState>(MutationState.Idle)
+    val deleteState: StateFlow<MutationState> = _deleteState
+
+    private val _currentPlant = MutableStateFlow<Plant?>(null)
+    val currentPlant: StateFlow<Plant?> = _currentPlant
+
+    fun setCurrentPlant(plantId: String) {
+        val state = _plantState.value
+        if (state is PlantListState.Success) {
+            _currentPlant.value = state.plants.find { it.id == plantId }
+        }
+    }
+
+    fun clearCurrentPlant() {
+        _currentPlant.value = null
+    }
 
     private val functions = FirebaseFunctions.Companion.getInstance("europe-southwest1")
 
@@ -23,26 +49,25 @@ class PlantViewModel(private val loginModel: LoginModel) : ViewModel() {
         viewModelScope.launch {
             loginModel.currentUser.collectLatest { user ->
                 if (user != null) {
-                    Log.d("DEBUG", "Current User ID: ${user.uid}") // ← Regardez les logs
+                    Log.d("DEBUG", "Current User ID: ${user.uid}")
                     fetchPlants()
                 }
             }
         }
     }
 
-    private fun fetchPlants() {
+    // Make this PUBLIC so it can be called from UI
+    fun fetchPlants() {
         functions.getHttpsCallable("getPlants").call()
             .addOnSuccessListener { result ->
                 try {
                     val data = result.data
 
-                    // Ajouter RETURN après avoir set l'état
                     if (data == null) {
                         _plantState.value = PlantListState.Empty
-                        return@addOnSuccessListener  // ← IMPORTANT : sortir ici
+                        return@addOnSuccessListener
                     }
 
-                    // Vérifier si c'est une liste vide
                     val dataTyped = data as? List<Map<String, Any>>
                     if (dataTyped == null || dataTyped.isEmpty()) {
                         _plantState.value = PlantListState.Empty
@@ -92,7 +117,6 @@ class PlantViewModel(private val loginModel: LoginModel) : ViewModel() {
             }
     }
 
-    // Dans PlantViewModel
     fun addPlant(
         commonName: String,
         scientificName: List<String>,
@@ -128,13 +152,119 @@ class PlantViewModel(private val loginModel: LoginModel) : ViewModel() {
             "notes" to notes
         )
 
-        functions.getHttpsCallable("addPlant").call(data)
+        functions.getHttpsCallable("createPlant").call(data)
             .addOnSuccessListener { result ->
                 Log.d("PlantViewModel", "Plant added successfully: ${result.data}")
-                fetchPlants() // Recharger la liste
+                fetchPlants()
             }
             .addOnFailureListener { e ->
                 Log.e("PlantViewModel", "Failed to add plant: ${e.message}")
+                _plantState.value = PlantListState.Error(e.message ?: "Failed to add plant")
             }
+    }
+
+    fun updatePlant(
+        plantId: String,
+        commonName: String? = null,
+        scientificName: List<String>? = null,
+        plantName: String? = null,
+        family: String? = null,
+        type: String? = null,
+        imageUrl: String? = null,
+        careLevel: String? = null,
+        sunlight: List<String>? = null,
+        watering: String? = null,
+        indoor: Boolean? = null,
+        poisonousToHumans: Boolean? = null,
+        poisonousToPets: Boolean? = null,
+        droughtTolerant: Boolean? = null,
+        soil: List<String>? = null,
+        notes: String? = null
+    ) {
+        val updates = hashMapOf<String, Any?>()
+
+        commonName?.let { updates["common_name"] = it }
+        scientificName?.let { updates["scientific_name"] = it }
+        plantName?.let { updates["plant_name"] = it }
+        family?.let { updates["family"] = it }
+        type?.let { updates["type"] = it }
+        imageUrl?.let { updates["image_url"] = it }
+        careLevel?.let { updates["care_level"] = it }
+        sunlight?.let { updates["sunlight"] = it }
+        watering?.let { updates["watering"] = it }
+        indoor?.let { updates["indoor"] = it }
+        poisonousToHumans?.let { updates["poisonous_to_humans"] = it }
+        poisonousToPets?.let { updates["poisonous_to_pets"] = it }
+        droughtTolerant?.let { updates["drought_tolerant"] = it }
+        soil?.let { updates["soil"] = it }
+        notes?.let { updates["notes"] = it }
+
+        val data = hashMapOf(
+            "id" to plantId,
+            "updates" to updates
+        )
+
+        functions.getHttpsCallable("updatePlant").call(data)
+            .addOnSuccessListener { result ->
+                Log.d("PlantViewModel", "Plant updated successfully: ${result.data}")
+                fetchPlants()
+            }
+            .addOnFailureListener { e ->
+                Log.e("PlantViewModel", "Failed to update plant: ${e.message}")
+                _plantState.value = PlantListState.Error(e.message ?: "Failed to update plant")
+            }
+    }
+
+    // Delete Plant with proper state handling
+    fun deletePlant(plantId: String) {
+
+
+        val data = hashMapOf(
+            "id" to plantId
+        )
+
+        functions.getHttpsCallable("deletePlant").call(data)
+            .addOnSuccessListener { result ->
+                Log.d("PlantViewModel", "Plant deleted successfully: ${result.data}")
+
+            }
+            .addOnFailureListener { e ->
+                Log.e("PlantViewModel", "Failed to delete plant: ${e.message}")
+
+                // Revert any optimistic updates by refetching
+                fetchPlants()
+            }
+    }
+
+    // Reset delete state to Idle
+    fun resetDeleteState() {
+        _deleteState.value = MutationState.Idle
+    }
+
+    fun initializeSamplePlants() {
+        viewModelScope.launch {
+            try {
+                val functions = FirebaseFunctions.getInstance("europe-southwest1")
+                val initFunction = functions.getHttpsCallable("initializeSamplePlants")
+
+                initFunction.call()
+                    .addOnSuccessListener { result ->
+                        val data = result.data as? Map<*, *>
+                        val message = data?.get("message") as? String
+                        val plantsAdded = (data?.get("plantsAdded") as? Number)?.toInt() ?: 0
+
+                        Log.d("PlantViewModel", "Init result: $message (Added: $plantsAdded)")
+
+                        if (plantsAdded > 0) {
+                            fetchPlants()
+                        }
+                    }
+                    .addOnFailureListener { exception ->
+                        Log.e("PlantViewModel", "Failed to initialize plants", exception)
+                    }
+            } catch (e: Exception) {
+                Log.e("PlantViewModel", "Error initializing sample plants", e)
+            }
+        }
     }
 }

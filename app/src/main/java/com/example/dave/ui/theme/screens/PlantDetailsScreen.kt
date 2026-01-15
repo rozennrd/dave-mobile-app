@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +29,7 @@ import com.example.dave.ui.theme.components.ConfirmActionDialog
 import com.example.dave.ui.theme.*
 import com.example.dave.ui.components.NavBar
 import com.example.dave.ui.components.DaveNavItem
+import com.example.dave.ui.components.FailsafeAsyncImage
 
 data class PlantDetail(
     val id: Int,
@@ -52,7 +54,7 @@ data class PlantDetail(
 fun PlantDetailScreen(
     plant: PlantDetail,
     onDeleteClick: () -> Unit = {},
-    onModifyClick: () -> Unit = {},
+    onModifyClick: (surname: String, notes: String) -> Unit = { _, _ ->},
     onHomeClick: () -> Unit = {},
     onAddClick: () -> Unit = {},
     onAccountClick: () -> Unit = {},
@@ -75,6 +77,9 @@ fun PlantDetailScreen(
     var isEditMode by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showSaveDialog by remember { mutableStateOf(false) }
+    val fallbackImagePainter = painterResource(id = R.drawable.heart_plant)
+//    var editedSurname by remember { mutableStateOf(plant.surname ?: "") }
+//    var editedNotes by remember { mutableStateOf(plant.notes ?: "") }
     var showDropdown by remember { mutableStateOf(false) }
 
     // On utilise remember(currentPlant) pour que les champs se vident/se remplissent quand on change de plante
@@ -174,9 +179,8 @@ fun PlantDetailScreen(
             }
 
             // Image de la plante
-            AsyncImage(
-                model = currentPlant.imageUrl,
-                contentDescription = currentPlant.commonName,
+            FailsafeAsyncImage(
+                plant.imageUrl,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(260.dp)
@@ -186,7 +190,8 @@ fun PlantDetailScreen(
                             bottomEnd = 32.dp
                         )
                     ),
-                contentScale = ContentScale.Crop
+                contentDescription = plant.commonName,
+                fallbackImage = fallbackImagePainter
             )
 
             // Contenu principal
@@ -521,10 +526,9 @@ fun PlantDetailScreen(
             message = "Are you sure you want to save the modifications to this plant?",
             confirmLabel = "Save",
             onConfirm = {
-                // TODO : Sauvegarde
+                onModifyClick(editedSurname, editedNotes)  // Call the callback with edited data
                 isEditMode = false
                 showSaveDialog = false
-                onModifyClick()
             },
             onDismiss = {
                 showSaveDialog = false
@@ -552,30 +556,50 @@ fun PlantDetailScreen(
 }
 
 @Composable
+private fun EditableField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+            text = "$label :",
+            color = BrownPrimary,
+            fontSize = 16.sp,
+            fontFamily = SulphurPoint
+        )
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = GreenPrimary,
+                unfocusedBorderColor = BrownPrimary
+            ),
+            textStyle = LocalTextStyle.current.copy(
+                fontFamily = SulphurPoint,
+                fontSize = 16.sp
+            )
+        )
+    }
+}
+
+@Composable
 fun AsyncImage(
     model: String?,
     contentDescription: String,
     modifier: Modifier,
     contentScale: ContentScale
 ) {
-    SubcomposeAsyncImage(
-        model = model,
-        contentDescription = contentDescription,
-        modifier = modifier,
-        contentScale = contentScale,
-        // Pendant que l'image charge
-        loading = {
-            Box(Modifier.background(Color.LightGray), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(modifier = Modifier.size(32.dp), color = GreenPrimary)
-            }
-        },
-        // S'il y a une erreur d'URL ou reseau
-        error = {
-            Box(Modifier.background(Color.LightGray), contentAlignment = Alignment.Center) {
-                Icon(painter = painterResource(R.drawable.nature_24dp), contentDescription = null, tint = Color.Gray)
-            }
-        }
-    )
+    Box(
+        modifier = modifier.background(Color.LightGray),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Image",
+            color = Color.DarkGray
+        )
+    }
 }
 
 @Composable
@@ -590,7 +614,7 @@ private fun SectionTitle(title: String) {
 }
 
 @Composable
-private fun PlantInfoRow(label: String, value: String) {
+fun PlantInfoRow(label: String, value: String) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -611,7 +635,7 @@ private fun PlantInfoRow(label: String, value: String) {
 }
 
 @Composable
-private fun PoisonousInfoRow(
+fun PoisonousInfoRow(
     iconRes: Int,
     text: String,
     isPoisonous: Boolean
@@ -625,7 +649,7 @@ private fun PoisonousInfoRow(
                 painter = painterResource(iconRes),
                 contentDescription = text,
                 modifier = Modifier.size(24.dp),
-                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Red)
+                colorFilter = ColorFilter.tint(Red)
             )
             Text(
                 text = text,

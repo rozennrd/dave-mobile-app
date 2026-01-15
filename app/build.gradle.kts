@@ -48,6 +48,7 @@ android {
 dependencies {
     // Core Android
     implementation("androidx.core:core-ktx:1.17.0")
+    implementation(libs.androidx.compose.runtime)
 
     // Lifecycle
     val lifecycle_version = "2.10.0"

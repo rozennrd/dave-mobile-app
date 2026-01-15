@@ -15,7 +15,9 @@ import coil.compose.AsyncImage
 fun FailsafeAsyncImage(
     url: String?,
     fallbackImage: Painter, // Local image resource
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    contentDescription: String,
+
 ) {
     var hasError by remember { mutableStateOf(false) }
 
@@ -23,14 +25,14 @@ fun FailsafeAsyncImage(
         // Show fallback
         Image(
             painter = fallbackImage,
-            contentDescription = "...",
+            contentDescription = contentDescription,
             modifier = modifier,
             contentScale = ContentScale.Crop,
         )
     } else {
         AsyncImage(
             model = url,
-            contentDescription = "...",
+            contentDescription = contentDescription,
             modifier = modifier,
             contentScale = ContentScale.Crop,
             onError = { hasError = true } // ← This triggers fallback
